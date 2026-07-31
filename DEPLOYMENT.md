@@ -179,19 +179,55 @@ If that ID is taken, change the digits and rerun both lines.
 
 ### 2.4 — Link billing to the project
 
-This must be done in the browser:
+> ⚠️ **The most common mistake in this whole guide.** Google auto-creates a
+> default project (a random name like `rich-adviser-xvv9d`). The Cloud Console's
+> project picker often sits on *that* one, so you link billing to the wrong
+> project and `movecheck-app-4471` stays unbilled. The symptom is
+> `billingEnabled: false` no matter how many times you "enable" it in the UI.
+>
+> **Do it from the CLI instead** — the project is named explicitly, so it cannot
+> go to the wrong place.
 
-1. Go to **https://console.cloud.google.com/billing**
-2. Select **MoveCheck** from the project dropdown at the top
-3. Click **Link a billing account** → choose your account → **Set account**
+**1. Find your billing account ID:**
 
-Confirm it worked:
+```bash
+gcloud billing accounts list
+```
+
+```
+ACCOUNT_ID            NAME                OPEN
+01A2B3-C4D5E6-F7G8H9  My Billing Account  True
+```
+
+If this returns nothing, you haven't created a billing account yet — do that at
+https://console.cloud.google.com/billing (add a card), then rerun.
+
+**2. Link it to *this* project:**
+
+```bash
+gcloud billing projects link movecheck-app-4471 \
+  --billing-account=01A2B3-C4D5E6-F7G8H9
+```
+
+**3. Confirm:**
 
 ```bash
 gcloud billing projects describe movecheck-app-4471
 ```
 
-You want `billingEnabled: true`. If it's false, the next step fails.
+You want `billingEnabled: true`. If it's still `false`, you linked a different
+project — check the project ID in the command matches exactly.
+
+<details>
+<summary>Doing it in the browser instead</summary>
+
+1. Go to https://console.cloud.google.com/billing
+2. **Switch the project picker at the top to `movecheck-app-4471` first** —
+   this is the step people miss
+3. **Link a billing account** → choose your account → **Set account**
+
+Verify with the `describe` command above regardless.
+</details>
 
 ---
 
@@ -431,6 +467,29 @@ Read the first red line.
 - **`denied: Permission ... artifactregistry`** — APIs not enabled. Rerun 2.5.
 - **`billing account not found`** — billing isn't linked. Rerun 2.4.
 - **pip resolution errors** — transient; just rerun the deploy command.
+
+### `billingEnabled: false` no matter what I do in the console
+
+You linked billing to a *different* project — almost always Google's
+auto-created default (a random name like `rich-adviser-xvv9d`). The Console's
+project picker doesn't follow what you typed in the terminal.
+
+Check which project the CLI is actually pointed at:
+
+```bash
+gcloud config get-value project
+```
+
+Then link by explicit name, which can't target the wrong project:
+
+```bash
+gcloud billing accounts list
+gcloud billing projects link movecheck-app-4471 --billing-account=YOUR_ACCOUNT_ID
+gcloud billing projects describe movecheck-app-4471   # expect billingEnabled: true
+```
+
+You can safely leave the default project unused — an empty project costs
+nothing.
 
 ### Cloud Run: deploys OK but `/api/health` times out
 
