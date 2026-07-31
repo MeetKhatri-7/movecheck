@@ -26,9 +26,9 @@ export function EmptyState({ kicker, title, body, ctaLabel, onCta, illustration 
     <div style={{
       display: 'grid',
       gridTemplateColumns: illustration ? 'auto 1fr' : '1fr',
-      gap: 32,
+      gap: 'clamp(20px, 4vw, 32px)',
       alignItems: 'center',
-      padding: '56px 40px',
+      padding: 'clamp(32px, 6vw, 56px) clamp(20px, 5vw, 40px)',
       background: C.surface,
       backdropFilter: C.glassBlur,
       WebkitBackdropFilter: C.glassBlur,
@@ -51,7 +51,7 @@ export function EmptyState({ kicker, title, body, ctaLabel, onCta, illustration 
         <div style={{
           fontFamily: F.display,
           fontWeight: 400,
-          fontSize: 38,
+          fontSize: 'clamp(26px, 6vw, 38px)',
           letterSpacing: '0.4px',
           lineHeight: 1.05,
           color: C.ink,

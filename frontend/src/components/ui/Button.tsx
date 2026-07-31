@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { C, F, R } from '../../theme/tokens';
+import { useIsTouch } from '../../hooks/useMediaQuery';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'sage';
 type Size = 'sm' | 'md' | 'lg';
@@ -42,6 +43,7 @@ export function Button({
 }: ButtonProps) {
   const [hover, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const isTouch = useIsTouch();
 
   const sizeMap = {
     sm: { padY: 9,  padX: 18, font: 12.5, gap: 8,  },
@@ -95,12 +97,18 @@ export function Button({
         fontWeight: variant === 'primary' || variant === 'danger' || variant === 'sage' ? 800 : 700,
         fontSize: sizeMap.font,
         letterSpacing: '0.3px',
-        transform: pressed ? 'scale(0.98)' : hover && !disabled ? 'scale(1.03)' : 'scale(1)',
+        // `sm` is only ~34px tall — under the 44px touch target guideline.
+        // Grow it with a finger, leave the tight desktop rhythm alone.
+        minHeight: isTouch ? 44 : undefined,
+        // Hover-scale sticks after a tap on touch devices; skip it there.
+        transform: pressed ? 'scale(0.98)' : hover && !disabled && !isTouch ? 'scale(1.03)' : 'scale(1)',
         opacity: disabled ? 0.4 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'background 160ms ease, transform 120ms ease, border-color 160ms ease, color 160ms ease',
         width: block ? '100%' : 'auto',
-        whiteSpace: 'nowrap',
+        // A full-width button must be allowed to wrap its label rather than
+        // spill past the screen edge.
+        whiteSpace: block ? 'normal' : 'nowrap',
         ...style,
       }}>
       {iconLeft}

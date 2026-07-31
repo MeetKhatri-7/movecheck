@@ -10,8 +10,9 @@ import {
   Button, Card, Pill, SectionLabel, Display,
 } from '@/components/ui';
 import { ArrowBadge } from '@/components/ui/Button';
-import { C, F, R } from '@/theme/tokens';
+import { C, F, R, GUTTER, gridCols } from '@/theme/tokens';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CheckCircle2, Upload as UploadIcon, X, Video, Camera, BookOpen, Image as ImageIcon } from 'lucide-react';
 
 interface Props {
@@ -172,7 +173,9 @@ const refTone: Record<string, 'clay'|'good'|'neutral'> = {
 };
 
 /* ── Reference card ─────────────────────────────────────────── */
-function RefCard({ r, onClick, imgSrc }: { r: ExerciseRef; onClick: () => void; imgSrc?: string }) {
+function RefCard({ r, onClick, imgSrc, compact }: {
+  r: ExerciseRef; onClick: () => void; imgSrc?: string; compact?: boolean;
+}) {
   const [hov, setHov] = useState(false);
   const showImg = r.type === 'IMAGE' && !!imgSrc;
   return (
@@ -181,7 +184,9 @@ function RefCard({ r, onClick, imgSrc }: { r: ExerciseRef; onClick: () => void; 
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        width: 320, flexShrink: 0,
+        // Narrower on phones so the next card peeks in and the rail reads
+        // as scrollable rather than as a single cropped card.
+        width: compact ? 244 : 320, flexShrink: 0,
         background: C.surface,
         border: `1px solid ${hov ? C.borderClay : C.border}`,
         borderRadius: R.lg,
@@ -217,7 +222,7 @@ function RefCard({ r, onClick, imgSrc }: { r: ExerciseRef; onClick: () => void; 
           <Pill tone={refTone[r.type]} size="xs">{r.type}</Pill>
         </span>
       </div>
-      <div style={{ padding: '16px 20px 18px' }}>
+      <div style={{ padding: compact ? '14px 16px 16px' : '16px 20px 18px' }}>
         <div style={{ fontFamily: F.display, fontSize: 17, lineHeight: 1.2, color: C.ink, marginBottom: 4, letterSpacing: '-0.01em' }}>
           {r.title}
         </div>
@@ -233,15 +238,17 @@ function RefCard({ r, onClick, imgSrc }: { r: ExerciseRef; onClick: () => void; 
 }
 
 /* ── Upload drop zone ───────────────────────────────────────── */
-function UploadZone({ up, file, onFile }: {
-  up: ExerciseUpload; file?: File; onFile: (f: File) => void;
+function UploadZone({ up, file, onFile, isMobile }: {
+  up: ExerciseUpload; file?: File; onFile: (f: File) => void; isMobile?: boolean;
 }) {
   const [drag, setDrag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const handle = (f?: File) => { if (f && f.type.startsWith('video/')) onFile(f); };
 
   return (
-    <div style={{ flex: 1, minWidth: 280 }}>
+    // `minWidth: 280` plus the page gutter overflows a 375px viewport, so on
+    // phones each zone takes the full row instead of trying to share one.
+    <div style={{ flex: isMobile ? '1 1 100%' : 1, minWidth: isMobile ? 0 : 280, width: isMobile ? '100%' : undefined }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         {up.shape && (
           <span style={{
@@ -279,18 +286,21 @@ function UploadZone({ up, file, onFile }: {
         {file ? (
           <>
             <CheckCircle2 size={32} strokeWidth={1.6} color={C.sage} />
-            <div style={{ fontFamily: F.body, fontWeight: 500, fontSize: 13.5, color: C.ink }}>
+            <div style={{
+              fontFamily: F.body, fontWeight: 500, fontSize: 13.5, color: C.ink,
+              maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {file.name.length > 28 ? file.name.slice(0, 28) + '…' : file.name}
             </div>
             <div style={{ fontSize: 11.5, color: C.ink3 }}>
-              {(file.size / 1024 / 1024).toFixed(1)} MB · click to replace
+              {(file.size / 1024 / 1024).toFixed(1)} MB · tap to replace
             </div>
           </>
         ) : (
           <>
             <UploadIcon size={28} strokeWidth={1.6} color={drag ? C.clay : C.ink3} />
             <div style={{ fontFamily: F.body, fontWeight: 500, fontSize: 13.5, color: drag ? C.clay : C.ink2 }}>
-              {drag ? 'Release to upload' : 'Drop video or click to choose'}
+              {drag ? 'Release to upload' : isMobile ? 'Tap to choose a video' : 'Drop video or click to choose'}
             </div>
             <div style={{ fontSize: 11.5, color: C.ink3 }}>
               MP4 · MOV · AVI · up to 2 GB
@@ -311,31 +321,42 @@ function Modal({ r, onClose, exercise }: { r: ExerciseRef; onClose: () => void; 
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'rgba(10,13,16,0.72)',
       backdropFilter: 'blur(10px)',
-      padding: 32,
+      // 32px of inset on a 375px screen leaves the sheet 311px wide. Give the
+      // dialog the screen on phones, and clear the notch / home indicator.
+      padding: 'clamp(12px, 4vw, 32px)',
+      paddingTop: `max(clamp(12px, 4vw, 32px), env(safe-area-inset-top, 0px))`,
+      paddingBottom: `max(clamp(12px, 4vw, 32px), env(safe-area-inset-bottom, 0px))`,
     }} className="animate-fade-in">
       <Card onClick={(e: React.MouseEvent) => e.stopPropagation()} pad={0} variant="raised"
         style={{
-          maxWidth: 720, width: '100%', maxHeight: '85vh',
+          maxWidth: 720, width: '100%', maxHeight: '100%',
           overflow: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.20)',
+          WebkitOverflowScrolling: 'touch',
         }}>
         <div style={{
-          padding: '20px 28px',
+          padding: 'clamp(16px,3.5vw,20px) clamp(18px,4vw,28px)',
           borderBottom: `1px solid ${C.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          position: 'sticky', top: 0, zIndex: 1,
+          background: C.surfaceSolid,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             <Pill tone={refTone[r.type]} size="sm">{r.type}</Pill>
-            <div style={{ fontFamily: F.display, fontSize: 22, color: C.ink, letterSpacing: '-0.01em' }}>
+            <div style={{
+              fontFamily: F.display, fontSize: 'clamp(18px,4vw,22px)', color: C.ink,
+              letterSpacing: '-0.01em', minWidth: 0,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {r.title}
             </div>
           </div>
           <button onClick={onClose} aria-label="Close" style={{
             background: 'transparent', border: `1px solid ${C.border}`, borderRadius: R.pill,
-            width: 32, height: 32, color: C.ink2, cursor: 'pointer',
+            width: 36, height: 36, color: C.ink2, cursor: 'pointer', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}><X size={14} /></button>
+          }}><X size={16} /></button>
         </div>
-        <div style={{ padding: 28 }}>
+        <div style={{ padding: 'clamp(18px,4vw,28px)' }}>
           {r.type === 'GUIDE' && r.guide ? (
             <div>
               <SectionLabel style={{ marginBottom: 16 }}>Step-by-step</SectionLabel>
@@ -391,6 +412,7 @@ function Modal({ r, onClose, exercise }: { r: ExerciseRef; onClose: () => void; 
 
 export function InstructionPage({ exercise, completed, uploads, setUpload, onAnalyse, onBack }: Props) {
   const [modal, setModal] = useState<ExerciseRef | null>(null);
+  const isMobile = useIsMobile();
   const { type } = useParams();
   const assessmentType = isValidAssessmentType(type) ? type : 'mobility';
   const exercises = listExercises(assessmentType);
@@ -432,7 +454,7 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
       <ExerciseProgressBar current={exIdx + 1} total={exercises.length} completed={completedSteps} />
 
       {/* ── Exercise title ─────────────────────────── */}
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '48px 32px 28px' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `clamp(28px,5vw,48px) ${GUTTER} clamp(20px,3.5vw,28px)` }}>
         <SectionLabel style={{ marginBottom: 12 }}>
           {exercise.category} · {exercise.difficulty} · {exercise.duration}
         </SectionLabel>
@@ -449,25 +471,25 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
       </div>
 
       {/* ── Reference library ─────────────────────── */}
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `0 ${GUTTER}` }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
             <SectionLabel>Reference library</SectionLabel>
             <Pill tone="neutral" size="xs">{exercise.refs.length} items</Pill>
           </div>
-          <span style={{ fontSize: 12, color: C.ink3 }}>Scroll →</span>
+          <span style={{ fontSize: 12, color: C.ink3, whiteSpace: 'nowrap' }}>Swipe →</span>
         </div>
-        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 12 }}>
+        <div className="mc-hscroll" style={{ display: 'flex', gap: 14, paddingBottom: 12 }}>
           {exercise.refs.map((r, i) => (
-            <RefCard key={i} r={r} onClick={() => setModal(r)}
+            <RefCard key={i} r={r} onClick={() => setModal(r)} compact={isMobile}
               imgSrc={r.type === 'IMAGE' ? `/images/exercises/${exercise.slug}.jpg` : undefined} />
           ))}
         </div>
       </div>
 
       {/* ── Checklist ─────────────────────────────── */}
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 32px 0' }}>
-        <Card variant="sunken" pad={20}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `20px ${GUTTER} 0` }}>
+        <Card variant="sunken" pad={isMobile ? 16 : 20}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
             <SectionLabel style={{ color: C.clay, marginRight: 4 }}>Submission checklist</SectionLabel>
             {exercise.checklist.map((c, i) => (
@@ -482,8 +504,8 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
 
       {/* ── Strength inputs ────────────────────────── */}
       {isStrength && (
-        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '14px 32px 0' }}>
-          <Card variant="raised" accent="clay">
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: `14px ${GUTTER} 0` }}>
+          <Card variant="raised" accent="clay" pad={isMobile ? 18 : 28}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
               <SectionLabel>Lift details</SectionLabel>
               <span style={{ fontSize: 12, color: C.ink3 }}>
@@ -492,7 +514,7 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
             </div>
             <div style={{
               display: 'grid', gap: 14,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: gridCols(220),
             }}>
               {strengthConfig.map(fld => {
                 const stored = currentInputs[fld.key];
@@ -515,8 +537,11 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
                         style={{
                           background: C.surface, color: C.ink,
                           border: `1px solid ${C.borderStrong}`, borderRadius: R.md,
-                          padding: '10px 12px', fontFamily: F.body, fontSize: 13.5,
+                          padding: '11px 12px', fontFamily: F.body, fontSize: 13.5,
                           outline: 'none', cursor: 'pointer',
+                          // Long option labels ("Powerlifting (low touch, tucked…)")
+                          // otherwise stretch the select past its grid track.
+                          width: '100%', maxWidth: '100%', minWidth: 0,
                         }}>
                         {fld.options!.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
@@ -532,8 +557,8 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
                           style={{
                             background: C.surface, color: C.ink,
                             border: `1px solid ${C.borderStrong}`, borderRadius: R.md,
-                            padding: '10px 12px', fontFamily: F.body, fontSize: 13.5,
-                            outline: 'none', minWidth: 0, flex: 1,
+                            padding: '11px 12px', fontFamily: F.body, fontSize: 13.5,
+                            outline: 'none', minWidth: 0, flex: 1, width: '100%',
                           }}
                         />
                         {fld.unit && <span style={{ fontSize: 12.5, color: C.ink3, minWidth: 28 }}>{fld.unit}</span>}
@@ -549,8 +574,8 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
 
       {/* ── Tibia calibration ──────────────────────── */}
       {needsTibia && (
-        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '14px 32px 0' }}>
-          <Card variant="raised" accent="sage">
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: `14px ${GUTTER} 0` }}>
+          <Card variant="raised" accent="sage" pad={isMobile ? 18 : 28}>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
               <SectionLabel style={{ color: C.sage }}>Calibration</SectionLabel>
               <span style={{ fontSize: 13, color: C.ink2, flex: 1, minWidth: 200 }}>
@@ -568,7 +593,7 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
                   style={{
                     background: C.surface, color: C.ink,
                     border: `1px solid ${C.borderStrong}`, borderRadius: R.md,
-                    padding: '8px 12px', fontFamily: F.body, fontSize: 13.5,
+                    padding: '10px 12px', fontFamily: F.body, fontSize: 13.5,
                     outline: 'none', width: 96, textAlign: 'right',
                   }}/>
                 <span style={{ fontSize: 12.5, color: C.ink3 }}>cm</span>
@@ -582,7 +607,7 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
       )}
 
       {/* ── Upload zone ────────────────────────────── */}
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '28px 32px 24px' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `28px ${GUTTER} 24px` }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <SectionLabel>Upload your videos</SectionLabel>
@@ -609,6 +634,7 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
             <UploadZone
               key={u.id}
               up={u}
+              isMobile={isMobile}
               file={uploads[uploadKey(assessmentType, exercise.slug, u.id)]}
               onFile={f => setUpload(uploadKey(assessmentType, exercise.slug, u.id), f)}
             />
@@ -640,14 +666,19 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
         background: 'rgba(10,13,16,0.95)',
         backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
         borderTop: `1px solid ${ready ? C.borderClay : C.border}`,
-        padding: '16px 32px',
+        padding: `${isMobile ? 12 : 16}px ${GUTTER}`,
+        // Clear the iPhone home indicator — without this the CTA sits under it.
+        paddingBottom: `calc(${isMobile ? 12 : 16}px + env(safe-area-inset-bottom, 0px))`,
       }}>
         <div style={{
           maxWidth: 1180, margin: '0 auto',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, flexWrap: 'wrap',
+          display: 'flex',
+          alignItems: isMobile ? 'stretch' : 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          gap: isMobile ? 10 : 16, flexWrap: 'wrap',
         }}>
-          <div style={{ fontSize: 14, color: C.ink3 }}>
+          <div style={{ fontSize: isMobile ? 13 : 14, color: C.ink3, textAlign: isMobile ? 'center' : 'left' }}>
             {ready
               ? <span style={{ color: C.sage, fontWeight: 600 }}>All videos uploaded — ready to analyse</span>
               : <>Upload <strong style={{ color: C.ink }}>{exercise.uploads.length - filled}</strong> more video{exercise.uploads.length - filled !== 1 ? 's' : ''} to continue</>
@@ -659,7 +690,10 @@ export function InstructionPage({ exercise, completed, uploads, setUpload, onAna
             disabled={!ready}
             onClick={ready ? onAnalyse : undefined}
             iconRight={<ArrowBadge />}
-            style={{ paddingRight: 8 }}>
+            block={isMobile}
+            style={isMobile
+              ? { paddingLeft: 22, paddingRight: 6, justifyContent: 'space-between' }
+              : { paddingRight: 8 }}>
             ANALYSE
           </Button>
         </div>

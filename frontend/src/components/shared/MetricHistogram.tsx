@@ -21,10 +21,10 @@ function metricToPct(m: Metric): number {
   return Math.max(0, Math.min(120, pct)); // allow bars to exceed 100% when overshooting target
 }
 
-/** Short label for x-axis (max ~14 chars, removes parens). */
-function shortLabel(m: Metric): string {
+/** Short label for x-axis (removes parens, truncates to `max` chars). */
+function shortLabel(m: Metric, max = 14): string {
   let s = m.name.replace(/\s*\([^)]*\)\s*/g, '').trim();
-  if (s.length > 14) s = s.slice(0, 13) + '…';
+  if (s.length > max) s = s.slice(0, max - 1) + '…';
   return s;
 }
 
@@ -51,9 +51,16 @@ interface Props {
   maxBars?: number;
   /** Total chart height in px. */
   height?: number;
+  /**
+   * Intrinsic viewBox width. The SVG always renders at 100% of its container,
+   * so this is really a *text-scale* control: a narrower viewBox means the
+   * 10px axis labels are scaled down less on a small screen. Pass ~380 on
+   * phones, leave at 720 on desktop.
+   */
+  width?: number;
 }
 
-export function MetricHistogram({ metrics, maxBars = 9, height = 280 }: Props) {
+export function MetricHistogram({ metrics, maxBars = 9, height = 280, width = 720 }: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   // Build chart data, sorted: best tier first → worst tier last.
@@ -61,12 +68,15 @@ export function MetricHistogram({ metrics, maxBars = 9, height = 280 }: Props) {
     const tierRank: Record<string, number> = {
       very_good: 0, good: 1, yellow_flag: 2, bad: 3, very_bad: 4,
     };
+    // Narrow charts get shorter labels — the per-bar slot shrinks with the
+    // viewBox, so 14 chars would run into the neighbouring bar.
+    const labelMax = width < 500 ? 10 : 14;
     const enriched = metrics
       .filter(m => m.max && m.max > 0)
       .map(m => ({
         m,
         pct: metricToPct(m),
-        label: shortLabel(m),
+        label: shortLabel(m, labelMax),
       }));
     enriched.sort((a, b) => {
       const ar = tierRank[a.m.status] ?? 1;  // legacy 'good'/'bad' fall into rank 1/3
@@ -75,7 +85,7 @@ export function MetricHistogram({ metrics, maxBars = 9, height = 280 }: Props) {
       return b.pct - a.pct;
     });
     return enriched.slice(0, maxBars);
-  }, [metrics, maxBars]);
+  }, [metrics, maxBars, width]);
 
   const isPassing = (status: string) => status === 'good' || status === 'very_good';
 
@@ -83,7 +93,7 @@ export function MetricHistogram({ metrics, maxBars = 9, height = 280 }: Props) {
 
   // ── chart geometry ───────────────────────────────────────────────
   const padL = 44, padR = 16, padT = 28, padB = 56;
-  const W = 720;  // intrinsic; SVG scales responsively
+  const W = width;  // intrinsic; SVG scales responsively
   const H = height;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;

@@ -107,11 +107,20 @@
   --sidebar-accent-foreground: #F5F6F1;
   --sidebar-border: rgba(255,255,255,0.10);
   --sidebar-ring: rgba(255,90,54,0.40);
+
+  /* Page gutter — mirrors GUTTER in src/theme/tokens.ts. Kept as a CSS var so
+     the .mc-hscroll edge-bleed utility can cancel it exactly. */
+  --mc-gutter: clamp(16px, 4.5vw, 32px);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  html {
+    /* Stop iOS inflating text when a phone is rotated to landscape. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     background: #0A0D10;
@@ -124,9 +133,16 @@
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
     padding: 0;
+    /* Long unbroken tokens (session ids, file names, backend paths) must wrap
+       rather than push the page sideways on a 375px screen. */
+    overflow-wrap: break-word;
   }
   #root {
     min-height: 100vh;
+  }
+  /* Media never dictates layout width. */
+  img, svg, video, canvas {
+    max-width: 100%;
   }
   ::selection {
     background: rgba(255,90,54,0.28);
@@ -207,14 +223,64 @@
 /* Nav tagline appears only on wide screens */
 @media (min-width: 900px) { .mc-nav-tag { display: inline !important; } }
 
-/* Hero collapses to a single column on narrow screens; hide the floating
-   visual on very small screens where it competes with the copy. */
+/* Hero collapses to a single column on narrow screens. The visual stays —
+   it's the product shot — but stops floating (motion under thumb-scroll
+   reads as jank) and caps its width so it can't dwarf the copy. */
 @media (max-width: 860px) {
   .mc-hero { grid-template-columns: 1fr !important; }
-  .mc-hero-visual { max-width: 420px; }
+  .mc-hero-visual { max-width: 420px; width: 100%; margin: 0 auto; }
 }
-@media (max-width: 560px) {
-  .mc-hero-visual { display: none !important; }
+@media (max-width: 640px) {
+  .mc-hero-visual { animation: fadeUp 0.9s ease 0.15s both !important; max-width: 340px; }
+  /* Keyboard shortcuts are meaningless without a keyboard. */
+  .mc-shortcuts { display: none !important; }
+  /* The angled section edge eats a large slice of a tall, narrow section. */
+  .mc-slanted { clip-path: none !important; }
+}
+
+/* ──── Mobile utilities ────
+   Horizontal card rails bleed to the screen edge on phones so the first card
+   starts flush with the page gutter and the row reads as scrollable. */
+.mc-hscroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+@media (max-width: 640px) {
+  .mc-hscroll {
+    margin-inline: calc(-1 * var(--mc-gutter, 16px));
+    padding-inline: var(--mc-gutter, 16px);
+    scroll-snap-type: x proximity;
+  }
+  .mc-hscroll > * { scroll-snap-align: start; }
+}
+
+/* iOS Safari zooms the whole page when a control with a font-size under 16px
+   receives focus, and never zooms back out. Every form control in this app is
+   13.5px, so pin them to 16px on phones — the one place where the design
+   system loses to the platform. */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Interactive elements need a finger-sized hit area on touch devices. */
+@media (hover: none) and (pointer: coarse) {
+  button, [role="button"], a, select, summary {
+    touch-action: manipulation;
+  }
+  /* Breadcrumb links are 20px of text. Extend their hit area to 44px with an
+     overlay instead of padding, so the nav row's height never changes. */
+  .mc-crumb {
+    position: relative;
+  }
+  .mc-crumb::after {
+    content: '';
+    position: absolute;
+    inset: -12px -8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

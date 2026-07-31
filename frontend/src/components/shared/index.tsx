@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ArrowLeft, Menu, X } from 'lucide-react';
-import { C, F, R } from '../../theme/tokens';
+import { C, F, R, GUTTER } from '../../theme/tokens';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import { Breadcrumbs, type Crumb } from '../ui/Breadcrumbs';
 import { Logo } from '../ui/Logo';
 
@@ -26,6 +27,11 @@ interface NavProps {
  * Sticky top navigation with three slots: brand (left), breadcrumbs / title
  * (centre), action (right). Always-visible — calms the user, makes the app
  * feel like an environment rather than a series of disconnected pages.
+ *
+ * On phones the three-column grid can't hold: brand + centred trail + actions
+ * needs ~470px before it starts clipping. There the bar becomes a single flex
+ * row (icon-only back, wordmark, actions) and the trail moves to its own
+ * second line, where it has the full width to truncate into.
  */
 export function Nav({
   exerciseName, step, totalSteps,
@@ -35,11 +41,71 @@ export function Nav({
   onLogo,
 }: NavProps) {
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = useIsMobile();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const trail = crumbs ? (
+    <Breadcrumbs items={crumbs} collapse={isMobile} />
+  ) : exerciseName ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <span style={{
+        fontFamily: F.body, fontSize: 13, fontWeight: 500,
+        color: C.ink, letterSpacing: '0.02em',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>{exerciseName}</span>
+      {step && totalSteps && (
+        <span style={{
+          background: C.clayTint,
+          color: C.clay,
+          border: `1px solid ${C.borderClay}`,
+          padding: '2px 10px',
+          borderRadius: R.pill,
+          fontFamily: F.body, fontSize: 10.5, fontWeight: 600,
+          letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0,
+        }}>STEP {step} / {totalSteps}</span>
+      )}
+    </div>
+  ) : null;
+
+  const backButton = onBack && (
+    <button
+      onClick={onBack}
+      aria-label={backLabel || 'Back'}
+      title={backLabel || 'Back'}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        background: 'transparent',
+        border: `1px solid ${C.border}`,
+        borderRadius: R.pill,
+        // Icon-only on phones: the label is what pushes this row past the
+        // viewport, and the arrow alone is unambiguous next to the wordmark.
+        padding: isMobile ? 9 : '6px 12px 6px 10px',
+        color: C.ink2,
+        fontFamily: F.body,
+        fontSize: 12.5,
+        fontWeight: 500,
+        cursor: 'pointer',
+        flexShrink: 0,
+        transition: 'background 180ms, color 180ms, border-color 180ms',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = C.taupe;
+        e.currentTarget.style.color = C.ink;
+        e.currentTarget.style.borderColor = C.borderStrong;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = 'transparent';
+        e.currentTarget.style.color = C.ink3;
+        e.currentTarget.style.borderColor = C.border;
+      }}>
+      <ArrowLeft size={14} strokeWidth={2} />
+      {!isMobile && <span>{backLabel || 'Back'}</span>}
+    </button>
+  );
 
   return (
     <nav style={{
@@ -51,83 +117,52 @@ export function Nav({
       WebkitBackdropFilter: 'blur(12px) saturate(140%)',
       borderBottom: `1px solid ${C.border}`,
       transition: 'background 240ms ease, border-color 240ms ease',
+      paddingTop: 'env(safe-area-inset-top, 0px)',
     }}>
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(180px,1fr) auto minmax(180px,1fr)',
+        display: isMobile ? 'flex' : 'grid',
+        gridTemplateColumns: isMobile ? undefined : 'minmax(180px,1fr) auto minmax(180px,1fr)',
         alignItems: 'center',
-        gap: 24,
-        height: 64,
-        padding: '0 32px',
+        justifyContent: isMobile ? 'space-between' : undefined,
+        gap: isMobile ? 10 : 24,
+        minHeight: isMobile ? 56 : 64,
+        padding: `0 ${GUTTER}`,
         maxWidth: 1400,
         margin: '0 auto',
       }}>
         {/* ── Left: brand + optional back */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {onBack && (
-            <button
-              onClick={onBack}
-              aria-label={backLabel || 'Back'}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'transparent',
-                border: `1px solid ${C.border}`,
-                borderRadius: R.pill,
-                padding: '6px 12px 6px 10px',
-                color: C.ink2,
-                fontFamily: F.body,
-                fontSize: 12.5,
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'background 180ms, color 180ms, border-color 180ms',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = C.taupe;
-                e.currentTarget.style.color = C.ink;
-                e.currentTarget.style.borderColor = C.borderStrong;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = C.ink3;
-                e.currentTarget.style.borderColor = C.border;
-              }}>
-              <ArrowLeft size={14} strokeWidth={2} />
-              <span>{backLabel || 'Back'}</span>
-            </button>
-          )}
-          <Logo size={22} onClick={onLogo} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, minWidth: 0 }}>
+          {backButton}
+          <Logo size={isMobile ? 19 : 22} onClick={onLogo} />
         </div>
 
-        {/* ── Centre: breadcrumbs or exercise name */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          {crumbs ? (
-            <Breadcrumbs items={crumbs} />
-          ) : exerciseName ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{
-                fontFamily: F.body, fontSize: 13, fontWeight: 500,
-                color: C.ink, letterSpacing: '0.02em',
-              }}>{exerciseName}</span>
-              {step && totalSteps && (
-                <span style={{
-                  background: C.clayTint,
-                  color: C.clay,
-                  border: `1px solid ${C.borderClay}`,
-                  padding: '2px 10px',
-                  borderRadius: R.pill,
-                  fontFamily: F.body, fontSize: 10.5, fontWeight: 600,
-                  letterSpacing: '0.12em',
-                }}>STEP {step} / {totalSteps}</span>
-              )}
-            </div>
-          ) : null}
-        </div>
+        {/* ── Centre: breadcrumbs or exercise name (desktop only) */}
+        {!isMobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            {trail}
+          </div>
+        )}
 
         {/* ── Right: optional action slot */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+          gap: isMobile ? 6 : 10, minWidth: 0, flexShrink: 0,
+        }}>
           {rightSlot}
         </div>
       </div>
+
+      {/* ── Mobile second line: the trail, with the whole width to itself */}
+      {isMobile && trail && (
+        <div style={{
+          display: 'flex', alignItems: 'center', minWidth: 0,
+          padding: `0 ${GUTTER} 9px`,
+          borderTop: `1px solid ${C.border}`,
+          paddingTop: 8,
+        }}>
+          {trail}
+        </div>
+      )}
     </nav>
   );
 }
@@ -141,7 +176,7 @@ export function ExerciseProgressBar({
 }: { current: number; total: number; completed: Set<number> }) {
   return (
     <div style={{
-      display: 'flex', gap: 6, padding: '14px 32px',
+      display: 'flex', gap: 6, padding: `14px ${GUTTER}`,
       background: C.surface2,
       borderBottom: `1px solid ${C.border}`,
     }}>

@@ -6,7 +6,8 @@ import {
   Button, Pill, SectionLabel, Display, Stat, EmptyState,
 } from '@/components/ui';
 import { ArrowBadge } from '@/components/ui/Button';
-import { C, F, R } from '@/theme/tokens';
+import { C, F, R, GUTTER, gridCols } from '@/theme/tokens';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   Check, ArrowRight, Move, Footprints, ChevronsUpDown, Activity,
 } from 'lucide-react';
@@ -35,6 +36,7 @@ export function ExerciseGuide({
   assessmentType, exercises, onSelect, completed, reports, onBack, onDashboard, onSession,
 }: Props) {
   const [hov, setHov] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const totalVideos = exercises.reduce((s, e) => s + e.uploads.length, 0);
   const hasReports = reports && Object.keys(reports).length > 0;
   const heading = assessmentLabel(assessmentType);
@@ -58,10 +60,13 @@ export function ExerciseGuide({
       />
 
       {/* ── Header ─────────────────────────────────── */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px clamp(20px,4vw,40px) 24px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: `clamp(28px,5vw,48px) ${GUTTER} 24px` }}>
         <div className="animate-fade-up" style={{
-          display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) auto',
-          gap: 40, alignItems: 'flex-end',
+          display: 'grid',
+          // The stat trio needs ~280px; below the mobile breakpoint it drops
+          // under the headline instead of crushing it into a column of words.
+          gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 2fr) auto',
+          gap: isMobile ? 28 : 40, alignItems: isMobile ? 'stretch' : 'flex-end',
         }} >
           <div>
             <SectionLabel style={{ marginBottom: 14 }}>
@@ -76,7 +81,10 @@ export function ExerciseGuide({
                 : `Select any exercise to begin. Complete all ${exercises.length} for your full ${heading.toLowerCase()} profile.`}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex', gap: isMobile ? 0 : 32, flexWrap: 'wrap',
+            justifyContent: isMobile ? 'space-between' : undefined,
+          }}>
             <Stat label="Exercises" value={exercises.length} align="center" />
             <Stat label="Videos" value={totalVideos} align="center" />
             <Stat label="Completed" value={completed.size} accent={C.clay} align="center" />
@@ -105,7 +113,7 @@ export function ExerciseGuide({
       </div>
 
       {/* ── Exercise grid ─────────────────────────────── */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px clamp(20px,4vw,40px) 32px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: `20px ${GUTTER} 32px` }}>
         {exercises.length === 0 ? (
           <EmptyState
             kicker="Coming soon"
@@ -114,8 +122,8 @@ export function ExerciseGuide({
           />
         ) : (
           <div className="animate-fade-up-2" style={{
-            display: 'grid', gap: 20,
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            display: 'grid', gap: isMobile ? 14 : 20,
+            gridTemplateColumns: gridCols(320, 'fill'),
           }}>
             {exercises.map(ex => {
               const isDone = completed.has(ex.slug);
@@ -194,7 +202,7 @@ export function ExerciseGuide({
       {/* ── Bottom dashboard CTA ───────────────────────── */}
       {hasReports && onDashboard && (
         <div className="animate-fade-up-3" style={{
-          maxWidth: 1280, margin: '32px auto 0', padding: '44px clamp(20px,4vw,40px) 0',
+          maxWidth: 1280, margin: '32px auto 0', padding: `clamp(28px,5vw,44px) ${GUTTER} 0`,
           borderTop: `1px solid ${C.border}`, textAlign: 'center',
         }}>
           <SectionLabel style={{ marginBottom: 14, color: C.ink4 }}>Already analysed</SectionLabel>

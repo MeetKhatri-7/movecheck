@@ -7,9 +7,10 @@ import type { AnnotatedFrame } from '@/data/types';
 import {
   Button, Card, Pill, SectionLabel, Display, Stat, EmptyState, Skeleton, IconBadge,
 } from '@/components/ui';
-import { C, F, R, statusColor } from '@/theme/tokens';
+import { C, F, R, GUTTER, gridCols, statusColor } from '@/theme/tokens';
 import { ArrowBadge } from '@/components/ui/Button';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   X, Download, RefreshCcw, FileText, Calendar, Clock, Hash,
   Activity, Dumbbell, ListChecks, Users, MessageCircle, ImageIcon,
@@ -37,61 +38,70 @@ function formatDate(iso: string) {
 /* ── Full-screen frame modal ───────────────────────────── */
 function FrameModal({ frame, onClose }: { frame: AnnotatedFrame; onClose: () => void }) {
   useKeyboard({ onEscape: onClose });
+  const isMobile = useIsMobile();
   return (
     <div onClick={onClose} role="dialog" aria-modal="true" style={{
       position: 'fixed', inset: 0, zIndex: 200,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'rgba(10,13,16,0.82)', backdropFilter: 'blur(8px)',
-      cursor: 'zoom-out', padding: 32,
+      cursor: 'zoom-out', padding: isMobile ? 14 : 32,
+      paddingTop: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-top, 0px))`,
+      paddingBottom: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-bottom, 0px))`,
     }} className="animate-fade-in">
-      <div onClick={e => e.stopPropagation()} style={{ maxWidth: '92vw', maxHeight: '92vh', position: 'relative' }}>
+      <div onClick={e => e.stopPropagation()} style={{ maxWidth: '100%', maxHeight: '100%', position: 'relative' }}>
         <img src={frame.image_base64} alt={frame.label}
           style={{
-            maxWidth: '100%', maxHeight: '85vh',
+            maxWidth: '100%', maxHeight: isMobile ? '76vh' : '85vh',
             borderRadius: R.lg, border: `1px solid ${C.border}`,
             boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+            display: 'block',
           }} />
         <div style={{ textAlign: 'center', marginTop: 14 }}>
           <Pill tone="neutral" size="md">{frame.label}</Pill>
         </div>
         <button onClick={onClose} aria-label="Close" style={{
-          position: 'absolute', top: -14, right: -14, width: 36, height: 36, borderRadius: 18,
-          background: C.bg, border: `1px solid ${C.border}`, color: C.ink, cursor: 'pointer',
+          position: 'absolute',
+          top: isMobile ? 8 : -14, right: isMobile ? 8 : -14,
+          width: 40, height: 40, borderRadius: 20,
+          background: isMobile ? 'rgba(10,13,16,0.82)' : C.bg,
+          backdropFilter: isMobile ? 'blur(6px)' : undefined,
+          border: `1px solid ${C.border}`, color: C.ink, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}><X size={14} /></button>
+        }}><X size={16} /></button>
       </div>
     </div>
   );
 }
 
 /* ── Per-report block ─────────────────────────────────── */
-function ReportBlock({ type, slug, report, onOpen, onFrame }: {
+function ReportBlock({ type, slug, report, onOpen, onFrame, isMobile }: {
   type: AssessmentType; slug: string; report: any;
-  onOpen: () => void; onFrame: (f: AnnotatedFrame) => void;
+  onOpen: () => void; onFrame: (f: AnnotatedFrame) => void; isMobile?: boolean;
 }) {
   const ex = getExercise(type, slug);
   const g = gradeFromScore(report.score || 0);
   const frames: AnnotatedFrame[] = report.annotated_frames || [];
   const goodCount = (report.metrics || []).filter((m: any) => m.status === 'good').length;
   const totalMetrics = (report.metrics || []).length;
+  const padX = isMobile ? 18 : 28;
 
   return (
     <Card pad={0} accent={g.tone === 'good' ? 'sage' : g.tone === 'warn' ? 'amber' : 'rust'}>
       {/* Header */}
       <div style={{
-        padding: '22px 28px',
-        display: 'flex', alignItems: 'flex-start', gap: 18,
+        padding: `22px ${padX}px`,
+        display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 18,
         borderBottom: `1px solid ${C.border}`,
       }}>
         <span style={{
-          width: 44, height: 44, borderRadius: R.md,
+          width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: R.md,
           background: C.surface2, color: C.clay,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: F.display, fontSize: 20, flexShrink: 0,
+          fontFamily: F.display, fontSize: isMobile ? 17 : 20, flexShrink: 0,
         }}>{ex?.id ?? '·'}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: F.display, fontSize: 22, color: C.ink, letterSpacing: '-0.01em', lineHeight: 1.15 }}>
+            <span style={{ fontFamily: F.display, fontSize: isMobile ? 19 : 22, color: C.ink, letterSpacing: '-0.01em', lineHeight: 1.15 }}>
               {ex?.name ?? slug}
             </span>
             <Pill tone={g.tone} size="xs">{report.status}</Pill>
@@ -99,14 +109,14 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
           <SectionLabel style={{ marginTop: 4 }}>{type} · {ex?.subtitle ?? ''}</SectionLabel>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: F.display, fontSize: 36, color: g.color, lineHeight: 1 }}>{report.score ?? 0}</div>
+          <div style={{ fontFamily: F.display, fontSize: isMobile ? 28 : 36, color: g.color, lineHeight: 1 }}>{report.score ?? 0}</div>
           <SectionLabel style={{ marginTop: 4 }}>Grade · {g.label}</SectionLabel>
         </div>
       </div>
 
       {/* Summary */}
       {report.summary && (
-        <div style={{ padding: '16px 28px', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ padding: `16px ${padX}px`, borderBottom: `1px solid ${C.border}` }}>
           <p style={{ margin: 0, fontSize: 13.5, color: C.ink2, lineHeight: 1.7 }}>{report.summary}</p>
         </div>
       )}
@@ -114,7 +124,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
       {/* Stats strip */}
       {report.stats && (
         <div style={{
-          padding: '12px 28px', borderBottom: `1px solid ${C.border}`,
+          padding: `12px ${padX}px`, borderBottom: `1px solid ${C.border}`,
           display: 'flex', gap: 10, flexWrap: 'wrap',
         }}>
           {Object.entries(report.stats).map(([k, v]) => (
@@ -133,14 +143,14 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 
       {/* Metrics */}
       {report.metrics && report.metrics.length > 0 && (
-        <div style={{ padding: '18px 28px' }}>
+        <div style={{ padding: `18px ${padX}px` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <IconBadge tone="indigo" size="xs"><ListChecks size={12} strokeWidth={1.8} /></IconBadge>
             <SectionLabel>All metrics · {goodCount}/{totalMetrics} passed</SectionLabel>
           </div>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: gridCols(260),
             gap: 6,
           }}>
             {report.metrics.map((m: any, i: number) => {
@@ -166,7 +176,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 
       {/* Bilateral */}
       {report.bilateral && report.bilateral.length > 0 && (
-        <div style={{ padding: '0 28px 14px' }}>
+        <div style={{ padding: `0 ${padX}px 14px` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <IconBadge tone="indigo" size="xs"><Users size={12} strokeWidth={1.8} /></IconBadge>
             <SectionLabel>Bilateral</SectionLabel>
@@ -189,12 +199,12 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 
       {/* Frames */}
       {frames.length > 0 && (
-        <div style={{ padding: '0 28px 14px' }}>
+        <div style={{ padding: `0 ${padX}px 14px` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <IconBadge tone="clay" size="xs"><ImageIcon size={12} strokeWidth={1.8} /></IconBadge>
             <SectionLabel>Skeleton frames ({frames.length})</SectionLabel>
           </div>
-          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+          <div className="mc-hscroll" style={{ display: 'flex', gap: 12, paddingBottom: 4 }}>
             {frames.map((f, i) => (
               <button key={i} onClick={() => onFrame(f)} style={{
                 width: 200, flexShrink: 0, padding: 0, textAlign: 'left', cursor: 'pointer',
@@ -221,7 +231,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 
       {/* Coaching */}
       {report.coaching && report.coaching.length > 0 && (
-        <div style={{ padding: '0 28px 14px' }}>
+        <div style={{ padding: `0 ${padX}px 14px` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <IconBadge tone="amber" size="xs"><MessageCircle size={12} strokeWidth={1.8} /></IconBadge>
             <SectionLabel>Coaching</SectionLabel>
@@ -239,7 +249,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 
       {/* Per-rep raw */}
       {report.per_rep && report.per_rep.length > 0 && (
-        <details style={{ padding: '0 28px 14px' }}>
+        <details style={{ padding: `0 ${padX}px 14px` }}>
           <summary style={{
             fontFamily: F.body, fontWeight: 500, fontSize: 11, letterSpacing: '0.18em',
             color: C.ink3, textTransform: 'uppercase', cursor: 'pointer',
@@ -258,7 +268,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
       )}
 
       {/* Open */}
-      <div style={{ padding: '14px 28px 22px' }}>
+      <div style={{ padding: `14px ${padX}px 22px` }}>
         <Button variant="secondary" size="md" block onClick={onOpen}
           iconRight={<span style={{ fontSize: 16 }}>→</span>}>
           Open full report
@@ -271,6 +281,7 @@ function ReportBlock({ type, slug, report, onOpen, onFrame }: {
 /* ═══════════════════════════════════════════════════════════ */
 export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props) {
   const { sessionId, sessionLoading, reports } = useAppContext();
+  const isMobile = useIsMobile();
   const [serverSession, setServerSession] = useState<SessionData | null>(null);
   const [openFrame, setOpenFrame] = useState<AnnotatedFrame | null>(null);
   const [loadingServer, setLoadingServer] = useState(true);
@@ -344,19 +355,19 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
 
       {/* ── Banner ──────────────────────────────────────────── */}
       <div style={{
-        position: 'relative', height: 200, overflow: 'hidden',
+        position: 'relative', height: 'clamp(120px, 26vw, 200px)', overflow: 'hidden',
         backgroundImage: `linear-gradient(180deg, rgba(10,13,16,0.35) 0%, ${C.bg} 94%), url(/images/sessions/banner.jpg)`,
         backgroundSize: 'cover', backgroundPosition: 'center 35%',
         borderBottom: `1px solid ${C.border}`,
       }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'flex-end', padding: '0 32px 22px' }}>
-          <span style={{ fontFamily: F.body, fontSize: 11.5, letterSpacing: '2.5px', color: C.ink3, fontWeight: 700, textTransform: 'uppercase' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'flex-end', padding: `0 ${GUTTER} 22px` }}>
+          <span style={{ fontFamily: F.body, fontSize: isMobile ? 10 : 11.5, letterSpacing: isMobile ? '1.6px' : '2.5px', color: C.ink3, fontWeight: 700, textTransform: 'uppercase' }}>
             The archive · every session, kept
           </span>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '56px 32px 0' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `clamp(32px,6vw,56px) ${GUTTER} 0` }}>
         {/* Header */}
         <div className="animate-fade-up" style={{ marginBottom: 36 }}>
           <SectionLabel style={{ marginBottom: 14 }}>Persisted session</SectionLabel>
@@ -371,11 +382,11 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
         </div>
 
         {sessionLoading || loadingServer ? (
-          <Card pad={40} className="animate-fade-up-1" style={{ marginBottom: 32 }}>
+          <Card pad={isMobile ? 22 : 40} className="animate-fade-up-1" style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <Skeleton h={20} w="32%" />
               <Skeleton h={14} w="60%" />
-              <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4,1fr)' }}>
+              <div style={{ display: 'grid', gap: 14, gridTemplateColumns: gridCols(110) }}>
                 <Skeleton h={56} /><Skeleton h={56} /><Skeleton h={56} /><Skeleton h={56} />
               </div>
             </div>
@@ -383,10 +394,10 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
         ) : view ? (
           <>
             {/* Session meta */}
-            <Card pad={28} className="animate-fade-up-1" style={{ marginBottom: 28 }} accent="clay">
+            <Card pad={isMobile ? 20 : 28} className="animate-fade-up-1" style={{ marginBottom: 28 }} accent="clay">
               <div style={{
                 display: 'grid', gap: 18, marginBottom: 22,
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gridTemplateColumns: gridCols(180),
               }}>
                 {[
                   { Icon: Hash,     tone: 'neutral' as const, label: 'Session ID',     value: view.sessionId.slice(0, 8) + '…',          accent: undefined },
@@ -402,16 +413,19 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Button variant="primary" size="md" disabled={exporting}
+              <div style={{
+                display: 'flex', gap: 10, flexWrap: 'wrap',
+                flexDirection: isMobile ? 'column' : 'row',
+              }}>
+                <Button variant="primary" size="md" disabled={exporting} block={isMobile}
                   iconLeft={<Download size={14} />} onClick={exportJson}>
                   {exporting ? 'Exporting…' : 'Export session JSON'}
                 </Button>
-                <Button variant="secondary" size="md"
+                <Button variant="secondary" size="md" block={isMobile}
                   iconLeft={<RefreshCcw size={14} />} onClick={() => location.reload()}>
                   Refresh from server
                 </Button>
-                <Button variant="ghost" size="md" onClick={clearSession}
+                <Button variant="ghost" size="md" onClick={clearSession} block={isMobile}
                   style={{ color: C.rust }}>
                   Clear &amp; start new
                 </Button>
@@ -420,10 +434,12 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
                 Server JSON: <code style={{
                   background: C.surface2, padding: '2px 6px', borderRadius: 4,
                   fontFamily: F.mono, fontSize: 11, color: C.ink2,
+                  wordBreak: 'break-all',
                 }}>backend/sessions/{view.sessionId}.json</code>
                 {' · '}Local cache key: <code style={{
                   background: C.surface2, padding: '2px 6px', borderRadius: 4,
                   fontFamily: F.mono, fontSize: 11, color: C.ink2,
+                  wordBreak: 'break-all',
                 }}>mobilityai_reports_v2</code>
               </p>
             </Card>
@@ -448,10 +464,11 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
                     </div>
                     <div style={{
                       display: 'grid', gap: 18,
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+                      gridTemplateColumns: gridCols(460),
                     }}>
                       {Object.entries(view.assessments.mobility.reports).map(([slug, report]) => (
                         <ReportBlock key={slug} type="mobility" slug={slug} report={report}
+                          isMobile={isMobile}
                           onOpen={() => onOpenReport('mobility', slug)}
                           onFrame={f => setOpenFrame(f)} />
                       ))}
@@ -469,10 +486,11 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
                     </div>
                     <div style={{
                       display: 'grid', gap: 18,
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+                      gridTemplateColumns: gridCols(460),
                     }}>
                       {Object.entries(view.assessments.strength.reports).map(([slug, report]) => (
                         <ReportBlock key={slug} type="strength" slug={slug} report={report}
+                          isMobile={isMobile}
                           onOpen={() => onOpenReport('strength', slug)}
                           onFrame={f => setOpenFrame(f)} />
                       ))}
@@ -496,13 +514,17 @@ export function SessionsPage({ onOpenReport, onGuide, onLanding, onBack }: Props
         <div style={{
           paddingTop: 28, marginTop: 8,
           borderTop: `1px solid ${C.border}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex',
+          flexDirection: isMobile ? 'column-reverse' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
           flexWrap: 'wrap', gap: 12,
         }}>
-          <Button variant="ghost" size="md" onClick={onLanding}
+          <Button variant="ghost" size="md" onClick={onLanding} block={isMobile}
             iconLeft={<span style={{ fontSize: 16 }}>←</span>}>Home</Button>
-          <Button variant="primary" size="md" onClick={onGuide}
-            iconRight={<ArrowBadge size={30} />} style={{ paddingRight: 6 }}>
+          <Button variant="primary" size="md" onClick={onGuide} block={isMobile}
+            iconRight={<ArrowBadge size={30} />}
+            style={isMobile ? { paddingRight: 6, justifyContent: 'space-between' } : { paddingRight: 6 }}>
             Continue assessing
           </Button>
         </div>

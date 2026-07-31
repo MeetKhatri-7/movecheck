@@ -185,14 +185,15 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
     <div style={{
       position: 'relative', minHeight: '100vh', background: C.bg, color: C.ink,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '60px 24px 100px', overflow: 'hidden',
+      padding: 'clamp(32px,7vw,60px) clamp(16px,4.5vw,24px) clamp(56px,10vw,100px)',
+      overflow: 'hidden',
     }}>
       <div aria-hidden style={{
         position: 'fixed', inset: 0, zIndex: 0,
         backgroundImage: `linear-gradient(180deg, ${C.bg}f2 0%, ${C.bg}fa 60%, ${C.bg} 100%), url(/images/processing/ambient-bg.jpg)`,
         backgroundSize: 'cover', backgroundPosition: 'center',
       }} />
-      <div style={{ position: 'relative', zIndex: 1, marginBottom: 40 }}><Logo size={24} /></div>
+      <div style={{ position: 'relative', zIndex: 1, marginBottom: 'clamp(24px,5vw,40px)' }}><Logo size={24} /></div>
 
       {/* Main card with gradient progress ring */}
       <div style={{
@@ -202,8 +203,8 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
         border: `1px solid ${C.border}`, borderRadius: 22, padding: 'clamp(28px,5vw,44px)',
         textAlign: 'center', animation: 'fadeUp .6s ease both',
       }}>
-        <div style={{ position: 'relative', width: 150, height: 150, margin: '0 auto 28px' }}>
-          <svg width="150" height="150" viewBox="0 0 150 150" style={{ position: 'absolute', inset: 0, animation: 'ringGlow 2.4s ease-in-out infinite' }}>
+        <div style={{ position: 'relative', width: 'min(150px, 42vw)', aspectRatio: '1/1', margin: '0 auto 28px' }}>
+          <svg viewBox="0 0 150 150" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', animation: 'ringGlow 2.4s ease-in-out infinite' }}>
             <defs>
               <linearGradient id="mcRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={C.clay} />
@@ -217,19 +218,19 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
           </svg>
           <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px dashed rgba(255,255,255,0.12)', animation: 'ringRotate 12s linear infinite' }} />
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: F.display, fontSize: 38, letterSpacing: '0.5px' }}>{Math.round(progress)}<span style={{ fontSize: 18, color: C.ink3 }}>%</span></span>
+            <span style={{ fontFamily: F.display, fontSize: 'clamp(28px,9vw,38px)', letterSpacing: '0.5px' }}>{Math.round(progress)}<span style={{ fontSize: 18, color: C.ink3 }}>%</span></span>
             <span style={{ fontSize: 9, letterSpacing: '1.5px', color: C.ink4, fontWeight: 700 }}>ANALYSING</span>
           </div>
         </div>
 
-        <div style={{ fontFamily: F.display, fontSize: 28, letterSpacing: '0.4px', marginBottom: 10, textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: F.display, fontSize: 'clamp(22px,5.5vw,28px)', letterSpacing: '0.4px', marginBottom: 10, textTransform: 'uppercase' }}>
           {done ? 'Compiling Your Report' : 'Analysing Your Movement'}
         </div>
-        <div style={{ fontSize: 14, color: C.ink3, marginBottom: 32 }}>
+        <div style={{ fontSize: 14, color: C.ink3, marginBottom: 'clamp(22px,5vw,32px)' }}>
           {done ? "You'll see your report in a moment." : 'Hang tight — this usually takes under a minute.'}
         </div>
 
-        <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 36 }}>
+        <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 'clamp(24px,5vw,36px)' }}>
           <div style={{ height: '100%', background: `linear-gradient(90deg, ${C.clay}, ${C.clayHover})`, borderRadius: 4, width: `${progress}%`, transition: 'width .5s ease' }} />
         </div>
 
@@ -239,7 +240,8 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
             const isDone = i < stageIdx || done;
             return (
               <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12,
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: 'clamp(10px,2.5vw,12px) clamp(10px,3vw,16px)', borderRadius: 12,
                 background: isCurrent ? C.clayTint : 'transparent', transition: 'background .3s',
               }}>
                 <div style={{
@@ -248,7 +250,7 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
                   color: isDone ? C.sage : isCurrent ? C.clay : C.ink4, flexShrink: 0,
                   fontSize: 13, transition: 'all .3s',
                 }}>{isDone ? '✓' : isCurrent ? '●' : '○'}</div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: isDone || isCurrent ? C.ink : C.ink4 }}>{label}</span>
+                <span style={{ fontSize: 'clamp(13px,3.4vw,14px)', fontWeight: 600, color: isDone || isCurrent ? C.ink : C.ink4 }}>{label}</span>
               </div>
             );
           })}
@@ -259,7 +261,8 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
       <div style={{
         position: 'relative', zIndex: 1,
         width: '100%', maxWidth: 640, marginTop: 24, background: C.surface2,
-        border: `1px solid ${C.border}`, borderRadius: 22, padding: 32, animation: 'fadeUp .6s ease .1s both',
+        border: `1px solid ${C.border}`, borderRadius: 22,
+        padding: 'clamp(20px,5vw,32px)', animation: 'fadeUp .6s ease .1s both',
       }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', color: C.ink4, fontWeight: 700, marginBottom: 18, textTransform: 'uppercase' }}>Your report will look like this</div>
         <div style={{ display: 'flex', gap: 20, marginBottom: 20 }}>

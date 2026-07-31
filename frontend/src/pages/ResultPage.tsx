@@ -12,8 +12,9 @@ import { listExercises, isValidAssessmentType } from '@/data/registry';
 import {
   Button, Card, Pill, SectionLabel, Display, IconBadge,
 } from '@/components/ui';
-import { C, F, R, overallStatusColor, statusColor } from '@/theme/tokens';
+import { C, F, R, GUTTER, gridCols, overallStatusColor, statusColor } from '@/theme/tokens';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { useIsMobile, useIsNarrow } from '@/hooks/useMediaQuery';
 import {
   ShieldAlert, Activity, Zap, TrendingUp, Trophy,
   AlertTriangle, AlertCircle, CheckCircle2, Users,
@@ -68,14 +69,16 @@ function statusBand(score: number): { band: 'strong' | 'solid' | 'work'; label: 
  * Inline components
  * ──────────────────────────────────────────────────────────────────── */
 
-function ScoreBadge({ score, ready, status }: { score: number; ready: boolean; status: string }) {
+function ScoreBadge({ score, ready, status, size = 170 }: {
+  score: number; ready: boolean; status: string; size?: number;
+}) {
   const radius = 64;
   const circ = 2 * Math.PI * radius;
   const arc = circ * 0.75;
   const offset = arc - arc * (ready ? score / 100 : 0);
   const palette = overallStatusColor(status);
   return (
-    <svg width="170" height="170" viewBox="0 0 170 170">
+    <svg width={size} height={size} viewBox="0 0 170 170">
       <circle cx="85" cy="85" r={radius} fill="none"
         stroke={C.taupe} strokeWidth="9"
         strokeDasharray={`${arc} ${circ - arc}`}
@@ -141,28 +144,38 @@ function FrameTile({ frame, onOpen }: { frame: AnnotatedFrame; onOpen: () => voi
 
 function FrameLightbox({ frame, onClose }: { frame: AnnotatedFrame; onClose: () => void }) {
   useKeyboard({ onEscape: onClose });
+  const isMobile = useIsMobile();
   return (
     <div onClick={onClose} role="dialog" aria-modal="true" style={{
       position: 'fixed', inset: 0, zIndex: 200,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'rgba(10,13,16,0.85)', backdropFilter: 'blur(8px)',
-      padding: 32, cursor: 'zoom-out',
+      padding: isMobile ? 14 : 32, cursor: 'zoom-out',
+      paddingTop: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-top, 0px))`,
+      paddingBottom: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-bottom, 0px))`,
     }} className="animate-fade-in">
-      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', maxWidth: '92vw', maxHeight: '92vh' }}>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', maxWidth: '100%', maxHeight: '100%' }}>
         <img src={frame.image_base64} alt={frame.label}
           style={{
-            maxWidth: '100%', maxHeight: '85vh',
+            maxWidth: '100%', maxHeight: isMobile ? '76vh' : '85vh',
             borderRadius: R.lg, border: `1px solid ${C.border}`,
             boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+            display: 'block',
           }} />
         <div style={{ textAlign: 'center', marginTop: 14 }}>
           <Pill tone="neutral" size="md">{frame.label}</Pill>
         </div>
+        {/* Overhang the close button only where there's room for it — on a
+            phone a -14px offset puts half the target off-screen. */}
         <button onClick={onClose} aria-label="Close" style={{
-          position: 'absolute', top: -14, right: -14, width: 36, height: 36, borderRadius: 18,
-          background: C.bg, border: `1px solid ${C.border}`, color: C.ink, cursor: 'pointer',
+          position: 'absolute',
+          top: isMobile ? 8 : -14, right: isMobile ? 8 : -14,
+          width: 40, height: 40, borderRadius: 20,
+          background: isMobile ? 'rgba(10,13,16,0.82)' : C.bg,
+          backdropFilter: isMobile ? 'blur(6px)' : undefined,
+          border: `1px solid ${C.border}`, color: C.ink, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}><X size={14} /></button>
+        }}><X size={16} /></button>
       </div>
     </div>
   );
@@ -353,6 +366,7 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
   const gradeColor = GRADE_COLOR[cs.grade];
   const gradeTone = GRADE_TONE[cs.grade];
   const detRepCount = cs.aggregation.deteriorating_rep_nums.length;
+  const isMobile = useIsMobile();
 
   return (
     <div className="animate-fade-up-1" style={{ marginBottom: 20 }}>
@@ -360,18 +374,20 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
         {/* Header strip: grade letter + composite + variant + method */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'auto minmax(0, 1fr) auto',
-          gap: 18, alignItems: 'center',
-          padding: '22px 26px',
+          // Grade tile · headline · label pill needs ~440px before the
+          // headline starts wrapping one word per line. Stack on phones.
+          gridTemplateColumns: isMobile ? 'auto minmax(0, 1fr)' : 'auto minmax(0, 1fr) auto',
+          gap: isMobile ? 14 : 18, alignItems: 'center',
+          padding: `clamp(16px,4vw,22px) clamp(18px,4.5vw,26px)`,
           borderBottom: `1px solid ${C.border}`,
           background: C.surface,
         }}>
           <div style={{
-            width: 84, height: 84, borderRadius: R.lg,
+            width: isMobile ? 60 : 84, height: isMobile ? 60 : 84, borderRadius: R.lg,
             background: gradeColor, color: C.bg,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: F.display, fontSize: 56, lineHeight: 1, letterSpacing: '-0.04em',
-            boxShadow: `0 6px 18px ${gradeColor}55`,
+            fontFamily: F.display, fontSize: isMobile ? 40 : 56, lineHeight: 1, letterSpacing: '-0.04em',
+            boxShadow: `0 6px 18px ${gradeColor}55`, flexShrink: 0,
           }}>{cs.grade}</div>
           <div style={{ minWidth: 0 }}>
             <SectionLabel style={{ marginBottom: 4 }}>
@@ -379,7 +395,7 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
               {cs.variant ? <> · {cs.variant}</> : null}
             </SectionLabel>
             <div style={{
-              fontFamily: F.display, fontSize: 28, color: C.ink,
+              fontFamily: F.display, fontSize: 'clamp(21px,5vw,28px)', color: C.ink,
               letterSpacing: '-0.015em', lineHeight: 1.15,
             }}>
               {cs.label}, <em style={{ color: gradeColor }}>{Math.round(cs.composite)}/100</em>.
@@ -390,14 +406,18 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
               </div>
             )}
           </div>
-          <Pill tone={gradeTone} size="md">{cs.label}</Pill>
+          {/* On phones the verdict pill moves under the pair, spanning both
+              columns, rather than being squeezed into a third track. */}
+          <div style={{ gridColumn: isMobile ? '1 / -1' : undefined }}>
+            <Pill tone={gradeTone} size="md">{cs.label}</Pill>
+          </div>
         </div>
 
         {/* Override banner — only if any hard-fail triggered */}
         {triggered.length > 0 && (
           <div style={{
             background: '#fbeae3', borderBottom: `1px solid ${C.border}`,
-            padding: '14px 26px',
+            padding: `14px clamp(18px,4.5vw,26px)`,
             display: 'flex', gap: 12, alignItems: 'flex-start',
           }}>
             <IconBadge tone="rust" size="sm"><ShieldAlert size={14} strokeWidth={1.9} /></IconBadge>
@@ -422,10 +442,12 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
         )}
 
         {/* Category bars: Safety / Technique / Performance */}
-        <div style={{ padding: '20px 26px' }}>
+        <div style={{ padding: `20px clamp(18px,4.5vw,26px)` }}>
           <div style={{
             display: 'grid', gap: 12,
-            gridTemplateColumns: `repeat(${cs.categories.length}, minmax(0, 1fr))`,
+            // A hard `repeat(3, 1fr)` gives each bar ~100px on a phone, which
+            // clips the category name. Let them wrap instead.
+            gridTemplateColumns: isMobile ? gridCols(150) : `repeat(${cs.categories.length}, minmax(0, 1fr))`,
             marginBottom: 16,
           }}>
             {cs.categories.map(cat => {
@@ -466,7 +488,9 @@ function CompositeBreakdown({ cs }: { cs: CompositeScore }) {
               </SectionLabel>
               <div style={{
                 display: 'grid', gap: 10,
-                gridTemplateColumns: `repeat(${Math.min(cs.lowest_sub_scores.length, 2)}, minmax(0, 1fr))`,
+                gridTemplateColumns: isMobile
+                  ? '1fr'
+                  : `repeat(${Math.min(cs.lowest_sub_scores.length, 2)}, minmax(0, 1fr))`,
               }}>
                 {cs.lowest_sub_scores.slice(0, 2).map((cue, i) => {
                   const sev: 'rust'|'amber' = cue.sub_score < 60 ? 'rust' : 'amber';
@@ -517,6 +541,8 @@ export function ResultPage({
   void _completed;
   const [gaugeReady, setGaugeReady] = useState(false);
   const [openFrame, setOpenFrame] = useState<AnnotatedFrame | null>(null);
+  const isMobile = useIsMobile();
+  const isNarrow = useIsNarrow();
 
   const { type } = useParams();
   const assessmentType = isValidAssessmentType(type) ? type : 'mobility';
@@ -584,7 +610,7 @@ export function ResultPage({
         )}
       />
 
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 32px 0' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: `clamp(26px,5vw,40px) ${GUTTER} 0` }}>
         {/* ── Kicker + Headline ─────────────────────── */}
         <div className="animate-fade-up" style={{ marginBottom: 22 }}>
           <SectionLabel style={{ marginBottom: 10 }}>
@@ -633,17 +659,20 @@ export function ResultPage({
         <Card pad={0} className="animate-fade-up-1" style={{ marginBottom: 20, overflow: 'hidden' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(220px, 260px) minmax(0, 1fr)',
+            // The 220px score rail leaves under 100px for the verdict on a
+            // phone — stack the two so each gets the full width.
+            gridTemplateColumns: isMobile ? '1fr' : 'minmax(220px, 260px) minmax(0, 1fr)',
             alignItems: 'stretch',
           }}>
             <div style={{
-              padding: '28px 24px',
-              borderRight: `1px solid ${C.border}`,
+              padding: `clamp(22px,4.5vw,28px) clamp(18px,4vw,24px)`,
+              borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
+              borderBottom: isMobile ? `1px solid ${C.border}` : 'none',
               background: C.surface,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 14, textAlign: 'center',
             }}>
-              <ScoreBadge score={r.score} ready={gaugeReady} status={r.status} />
+              <ScoreBadge score={r.score} ready={gaugeReady} status={r.status} size={isMobile ? 148 : 170} />
               <Pill tone={band.band === 'strong' ? 'good' : band.band === 'solid' ? 'warn' : 'bad'} size="md">
                 {band.label}
               </Pill>
@@ -663,7 +692,7 @@ export function ResultPage({
                 </div>
               </div>
             </div>
-            <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
+            <div style={{ padding: `clamp(22px,4.5vw,28px) clamp(18px,5vw,32px)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <IconBadge tone={band.band === 'strong' ? 'sage' : band.band === 'solid' ? 'amber' : 'rust'} size="sm">
                   {band.band === 'strong' ? <Trophy size={14} strokeWidth={1.8} />
@@ -717,12 +746,15 @@ export function ResultPage({
             ═══════════════════════════════════════════════════════════════ */}
         <div className="animate-fade-up-2" style={{
           display: 'grid', gap: 16, marginBottom: 28,
-          gridTemplateColumns: hasMuscle
+          // The muscle diagram needs 360px to stay legible; below ~900px total
+          // there isn't room for it *and* the frame gallery side by side, so
+          // the two stack rather than overflowing the viewport.
+          gridTemplateColumns: hasMuscle && !isNarrow
             ? 'minmax(0, 1.6fr) minmax(360px, 1fr)'
             : '1fr',
         }}>
           {/* Frames gallery — ALL frames visible at once */}
-          <Card pad={22} variant="raised">
+          <Card pad={isMobile ? 16 : 22} variant="raised">
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               gap: 12, marginBottom: 16, flexWrap: 'wrap',
@@ -743,8 +775,10 @@ export function ResultPage({
             {allFrames.length > 0 ? (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: 12,
+                // 120px min keeps two tiles per row on a 375px phone instead
+                // of dropping to one giant tile per row.
+                gridTemplateColumns: gridCols(isMobile ? 120 : 150, 'fill'),
+                gap: isMobile ? 8 : 12,
               }}>
                 {allFrames.map((f, i) => (
                   <FrameTile key={i} frame={f} onOpen={() => setOpenFrame(f)} />
@@ -780,7 +814,11 @@ export function ResultPage({
             </div>
             <div style={{
               display: 'grid', gap: 12,
-              gridTemplateColumns: `repeat(${Math.min(r.coaching.length, 3)}, minmax(0, 1fr))`,
+              // Three fixed columns turn each coaching note into a ~100px
+              // ribbon on a phone. Let them wrap by content width instead.
+              gridTemplateColumns: isNarrow
+                ? gridCols(240)
+                : `repeat(${Math.min(r.coaching.length, 3)}, minmax(0, 1fr))`,
             }}>
               {r.coaching.slice(0, 3).map((note: string, i: number) => {
                 const isWarning = note.includes('⚠️') || note.includes('🚩');
@@ -824,7 +862,7 @@ export function ResultPage({
           }}>
             <div>
               <SectionLabel style={{ marginBottom: 4 }}>Technical · for coaches</SectionLabel>
-              <div style={{ fontFamily: F.display, fontSize: 24, color: C.ink, letterSpacing: '-0.015em' }}>
+              <div style={{ fontFamily: F.display, fontSize: 'clamp(20px,4.5vw,24px)', color: C.ink, letterSpacing: '-0.015em' }}>
                 The <em>numbers behind the score.</em>
               </div>
             </div>
@@ -836,7 +874,7 @@ export function ResultPage({
           {/* Grouped metric cards */}
           <div style={{
             display: 'grid', gap: 14, marginBottom: 18,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: gridCols(280),
           }}>
             {BUCKETS.map(b => (
               <MetricGroup
@@ -852,7 +890,7 @@ export function ResultPage({
 
           {/* HISTOGRAM — real SVG bar chart with target line */}
           {histogramMetrics.length > 0 && (
-            <Card pad={24} variant="raised" style={{ marginBottom: 16 }}>
+            <Card pad={isMobile ? 16 : 24} variant="raised" style={{ marginBottom: 16 }}>
               <div style={{
                 display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
                 marginBottom: 16, flexWrap: 'wrap', gap: 10,
@@ -870,20 +908,27 @@ export function ResultPage({
                   -- target threshold at 100%
                 </span>
               </div>
-              <MetricHistogram metrics={histogramMetrics} maxBars={9} height={300} />
+              {/* Fewer, wider bars on a phone — nine bars scaled into 340px
+                  renders the axis labels at ~5px. */}
+              <MetricHistogram
+                metrics={histogramMetrics}
+                maxBars={isMobile ? 5 : 9}
+                height={isMobile ? 260 : 300}
+                width={isMobile ? 380 : 720}
+              />
             </Card>
           )}
 
           {/* Bilateral L vs R */}
           {r.bilateral && r.bilateral.length > 0 && (
-            <Card variant="raised" pad={22} style={{ marginBottom: 16 }}>
+            <Card variant="raised" pad={isMobile ? 16 : 22} style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <IconBadge tone="indigo" size="sm"><Users size={14} strokeWidth={1.8} /></IconBadge>
                 <SectionLabel>Left vs right</SectionLabel>
               </div>
               <div style={{
                 display: 'grid', gap: 18,
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gridTemplateColumns: gridCols(260),
               }}>
                 {r.bilateral.map((b: BilateralComparison, i: number) => {
                   const lPct = Math.min(100, (b.left  / Math.max(b.max, 0.01)) * 100);
@@ -953,25 +998,34 @@ export function ResultPage({
         <div style={{
           paddingTop: 28, marginTop: 24,
           borderTop: `1px solid ${C.border}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex',
+          flexDirection: isMobile ? 'column-reverse' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
           flexWrap: 'wrap', gap: 12,
         }}>
-          <Button variant="ghost" size="md" onClick={onRedo}
+          <Button variant="ghost" size="md" onClick={onRedo} block={isMobile}
             iconLeft={<span style={{ fontSize: 16 }}>←</span>}>
             Redo this exercise
           </Button>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Button variant="secondary" size="md" onClick={onGuide}>All exercises</Button>
+          <div style={{
+            display: isMobile ? 'grid' : 'flex',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : undefined,
+            gap: 10, flexWrap: 'wrap',
+          }}>
+            <Button variant="secondary" size="md" onClick={onGuide} block={isMobile}>All exercises</Button>
             {onDashboard && (
-              <Button variant="secondary" size="md" onClick={onDashboard}>Dashboard</Button>
+              <Button variant="secondary" size="md" onClick={onDashboard} block={isMobile}>Dashboard</Button>
             )}
             {hasNext ? (
-              <Button variant="primary" size="md" onClick={onNext}
+              <Button variant="primary" size="md" onClick={onNext} block={isMobile}
+                style={isMobile ? { gridColumn: '1 / -1' } : undefined}
                 iconRight={<span style={{ fontSize: 16 }}>→</span>}>
                 Next exercise
               </Button>
             ) : (
-              <Button variant="primary" size="md" onClick={onDashboard || onGuide}
+              <Button variant="primary" size="md" onClick={onDashboard || onGuide} block={isMobile}
+                style={isMobile ? { gridColumn: '1 / -1' } : undefined}
                 iconRight={<span style={{ fontSize: 16 }}>→</span>}>
                 Full report
               </Button>

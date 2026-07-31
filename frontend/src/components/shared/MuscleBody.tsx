@@ -99,7 +99,7 @@ export function MuscleBody({ data, compact = false }: MuscleBodyProps) {
   }, [data.muscles]);
 
   const renderView = (paths: MusclePath[], label: string) => (
-    <div style={{ position: 'relative', flex: 1, display: 'flex', justifyContent: 'center' }}>
+    <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
       <div style={{
         position: 'absolute', top: 0, left: 0,
         fontFamily: F.body, fontSize: 10, fontWeight: 600,
@@ -108,7 +108,7 @@ export function MuscleBody({ data, compact = false }: MuscleBodyProps) {
       }}>{label}</div>
 
       <svg viewBox={VIEWBOX} width="100%" style={{
-        maxWidth: 220, height: 'auto', display: 'block',
+        maxWidth: 220, minWidth: 0, height: 'auto', display: 'block',
         filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.4))',
       }}>
         {/* Body silhouette (background) */}
@@ -205,8 +205,9 @@ export function MuscleBody({ data, compact = false }: MuscleBodyProps) {
       background: C.surface,
       border: `1px solid ${C.border}`,
       borderRadius: R.xl,
-      padding: compact ? 20 : 28,
+      padding: compact ? 20 : 'clamp(18px, 4vw, 28px)',
       display: 'flex', flexDirection: 'column', gap: compact ? 14 : 20,
+      minWidth: 0,
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -228,13 +229,16 @@ export function MuscleBody({ data, compact = false }: MuscleBodyProps) {
 
       {/* Body diagrams */}
       <div style={{
+        // Front/back stay side by side at every width — they're only ~110px
+        // each on a phone but the silhouette still reads, and stacking them
+        // would double the height of an already-tall report.
         display: 'grid', gap: 12,
         gridTemplateColumns: '1fr 1fr',
         background: `linear-gradient(180deg, ${C.bg3} 0%, ${C.bg} 100%)`,
         borderRadius: R.lg,
         padding: '16px 8px 8px',
         position: 'relative',
-        minHeight: 280,
+        minHeight: 'clamp(220px, 48vw, 280px)',
       }}>
         {renderView(FRONT_MUSCLES, 'Front')}
         {renderView(BACK_MUSCLES,  'Back')}

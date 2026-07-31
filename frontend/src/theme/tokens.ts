@@ -102,6 +102,40 @@ export const Z = {
   toast: 300,
 } as const;
 
+/**
+ * Breakpoints (px). These are the *only* widths the app branches on — keep
+ * them in sync with `hooks/useMediaQuery.ts`, which reads them directly.
+ */
+export const BP = {
+  mobile: 640,  // phones — one column, full-width CTAs
+  narrow: 900,  // large phones / small tablets — side-by-side panels stop fitting
+  tablet: 1024,
+} as const;
+
+/**
+ * Page gutter. Every full-width page section should use this for its
+ * horizontal padding instead of a hard-coded 32px — 32px of padding either
+ * side eats 17% of a 375px phone viewport.
+ */
+export const GUTTER = 'clamp(16px, 4.5vw, 32px)';
+
+/** Slightly tighter gutter for content nested inside a card. */
+export const GUTTER_TIGHT = 'clamp(14px, 3.5vw, 24px)';
+
+/**
+ * Responsive auto-fit grid columns.
+ *
+ * `minmax(320px, 1fr)` overflows any viewport narrower than 320px + padding,
+ * which is exactly what phones are. Wrapping the minimum in `min(…, 100%)`
+ * lets the track collapse to the container width instead, so the same grid
+ * works from 320px to 4K with no JS and no media query.
+ *
+ *   gridCols(440)          → 'repeat(auto-fit, minmax(min(440px, 100%), 1fr))'
+ *   gridCols(320, 'fill')  → uses auto-fill (keeps empty tracks)
+ */
+export const gridCols = (min: number, mode: 'fit' | 'fill' = 'fit') =>
+  `repeat(auto-${mode}, minmax(min(${min}px, 100%), 1fr))`;
+
 /** Reusable glass-card style block (spread into an inline style object). */
 export const glass = {
   background: C.surface,
@@ -156,5 +190,8 @@ export const scoreColor = (score: number): string => {
 };
 
 /** Single export object for ergonomic destructure: `const { C, F, R, S } = T`. */
-export const T = { C, F, R, S, Z, glass, statusColor, overallStatusColor, scoreColor };
+export const T = {
+  C, F, R, S, Z, BP, GUTTER, GUTTER_TIGHT, gridCols,
+  glass, statusColor, overallStatusColor, scoreColor,
+};
 export default T;

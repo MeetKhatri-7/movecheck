@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/movecheck.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover lets env(safe-area-inset-*) resolve, so sticky
+         footers clear the iPhone home indicator instead of sitting under it. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0D10" />
     <meta name="description" content="MoveCheck — coach-grade AI movement assessment. Record a few phone clips of mobility tests and strength lifts, get an honest, per-rep biomechanics report back." />
     <title>MoveCheck — Know How Your Body Moves</title>

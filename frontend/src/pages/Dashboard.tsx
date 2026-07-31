@@ -6,8 +6,9 @@ import {
   Button, Card, Pill, SectionLabel, Display, Stat, EmptyState, Skeleton, IconBadge,
 } from '@/components/ui';
 import { ArrowBadge } from '@/components/ui/Button';
-import { C, F, R } from '@/theme/tokens';
+import { C, F, R, GUTTER, gridCols } from '@/theme/tokens';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ListChecks, Trophy, AlertTriangle, Sparkles, Target, Flame } from 'lucide-react';
 
 interface Props {
@@ -28,7 +29,7 @@ function gradeFromScore(score: number): { label: string; tone: 'good' | 'warn' |
 }
 
 /* ── Overall score gauge ───────────────────────────────────── */
-function OverallGauge({ score, ready }: { score: number; ready: boolean }) {
+function OverallGauge({ score, ready, size = 208 }: { score: number; ready: boolean; size?: number }) {
   const radius = 84;
   const circ = 2 * Math.PI * radius;
   const arc = circ * 0.75;
@@ -36,7 +37,7 @@ function OverallGauge({ score, ready }: { score: number; ready: boolean }) {
   const g = gradeFromScore(score);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <svg width="208" height="208" viewBox="0 0 208 208">
+      <svg width={size} height={size} viewBox="0 0 208 208">
         <circle cx="104" cy="104" r={radius} fill="none"
           stroke={C.taupe} strokeWidth="9"
           strokeDasharray={`${arc} ${circ - arc}`}
@@ -100,10 +101,11 @@ function FrameThumb({ frame, onOpen }: { frame: AnnotatedFrame; onOpen: () => vo
 }
 
 /* ── Per-exercise card ────────────────────────────────────── */
-function ExerciseCard({ ex, report, onOpen, onFrame }: {
-  ex: Exercise; report: any; onOpen: () => void; onFrame: (f: AnnotatedFrame) => void;
+function ExerciseCard({ ex, report, onOpen, onFrame, isMobile }: {
+  ex: Exercise; report: any; onOpen: () => void; onFrame: (f: AnnotatedFrame) => void; isMobile?: boolean;
 }) {
   const g = gradeFromScore(report.score);
+  const padX = isMobile ? 18 : 28;
   const frames: AnnotatedFrame[] = report.annotated_frames || [];
   const bySide: Record<string, AnnotatedFrame> = {};
   for (const f of frames) {
@@ -116,25 +118,25 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
     <Card pad={0} accent={g.tone === 'good' ? 'sage' : g.tone === 'warn' ? 'amber' : 'rust'}>
       {/* Header */}
       <div style={{
-        padding: '24px 28px 18px',
-        display: 'flex', alignItems: 'flex-start', gap: 18,
+        padding: `${isMobile ? 18 : 24}px ${padX}px 18px`,
+        display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 18,
         borderBottom: `1px solid ${C.border}`,
       }}>
         <div style={{
-          width: 48, height: 48, borderRadius: R.md,
+          width: isMobile ? 38 : 48, height: isMobile ? 38 : 48, borderRadius: R.md,
           background: C.surface2, color: C.clay,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: F.display, fontSize: 22, flexShrink: 0,
+          fontFamily: F.display, fontSize: isMobile ? 18 : 22, flexShrink: 0,
         }}>{ex.id}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: F.display, fontSize: 22, color: C.ink,
+          <div style={{ fontFamily: F.display, fontSize: isMobile ? 19 : 22, color: C.ink,
             letterSpacing: '-0.01em', lineHeight: 1.15 }}>
             {ex.name}
           </div>
           <SectionLabel style={{ marginTop: 4 }}>{ex.subtitle}</SectionLabel>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: F.display, fontSize: 38, color: g.color, lineHeight: 1 }}>
+          <div style={{ fontFamily: F.display, fontSize: isMobile ? 30 : 38, color: g.color, lineHeight: 1 }}>
             {report.score}
           </div>
           <SectionLabel style={{ marginTop: 4 }}>Score · {g.label}</SectionLabel>
@@ -143,7 +145,7 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
 
       {/* Status + meta */}
       <div style={{
-        padding: '14px 28px', display: 'flex', flexWrap: 'wrap', gap: 12,
+        padding: `14px ${padX}px`, display: 'flex', flexWrap: 'wrap', gap: 12,
         alignItems: 'center', justifyContent: 'space-between',
         borderBottom: `1px solid ${C.border}`,
       }}>
@@ -156,11 +158,11 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
 
       {/* Frames */}
       {bestFrames.length > 0 && (
-        <div style={{ padding: '20px 28px 12px' }}>
+        <div style={{ padding: `20px ${padX}px 12px` }}>
           <SectionLabel style={{ marginBottom: 10 }}>
             {bestFrames.length > 1 ? 'Best rep · each side' : 'Best rep'}
           </SectionLabel>
-          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+          <div className="mc-hscroll" style={{ display: 'flex', gap: 12, paddingBottom: 4 }}>
             {bestFrames.map((f, i) => (
               <FrameThumb key={i} frame={f} onOpen={() => onFrame(f)} />
             ))}
@@ -170,7 +172,7 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
 
       {/* Coaching */}
       {report.coaching && report.coaching.length > 0 && (
-        <div style={{ padding: '14px 28px 8px' }}>
+        <div style={{ padding: `14px ${padX}px 8px` }}>
           <SectionLabel style={{ marginBottom: 10 }}>Coaching · top notes</SectionLabel>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {report.coaching.slice(0, 3).map((note: string, i: number) => (
@@ -191,7 +193,7 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
       )}
 
       {/* Open */}
-      <div style={{ padding: '14px 28px 24px' }}>
+      <div style={{ padding: `14px ${padX}px 24px` }}>
         <Button variant="secondary" size="md" block onClick={onOpen}
           iconRight={<span style={{ fontSize: 16 }}>→</span>}>
           Open full report
@@ -204,6 +206,7 @@ function ExerciseCard({ ex, report, onOpen, onFrame }: {
 /* ── Frame modal ─────────────────────────────────────────── */
 function FrameModal({ frame, onClose }: { frame: AnnotatedFrame; onClose: () => void }) {
   useKeyboard({ onEscape: onClose });
+  const isMobile = useIsMobile();
   return (
     <div onClick={onClose} role="dialog" aria-modal="true" style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -211,22 +214,31 @@ function FrameModal({ frame, onClose }: { frame: AnnotatedFrame; onClose: () => 
       backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       cursor: 'zoom-out',
-      padding: 32,
+      padding: isMobile ? 14 : 32,
+      paddingTop: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-top, 0px))`,
+      paddingBottom: `max(${isMobile ? 14 : 32}px, env(safe-area-inset-bottom, 0px))`,
     }} className="animate-fade-in">
-      <div style={{ maxWidth: '92vw', maxHeight: '92vh', position: 'relative' }}>
+      <div style={{ maxWidth: '100%', maxHeight: '100%', position: 'relative' }}>
         <img src={frame.image_base64} alt={frame.label}
           style={{
-            maxWidth: '100%', maxHeight: '85vh',
+            maxWidth: '100%', maxHeight: isMobile ? '76vh' : '85vh',
             borderRadius: R.lg, border: `1px solid ${C.border}`,
             boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+            display: 'block',
           }} />
         <div style={{ textAlign: 'center', marginTop: 14 }}>
           <Pill tone="neutral" size="md">{frame.label}</Pill>
         </div>
+        {/* Keep the close target on-screen: a -14px overhang puts half of it
+            outside the viewport once the image fills a phone's width. */}
         <button onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label="Close"
           style={{
-            position: 'absolute', top: -14, right: -14, width: 36, height: 36, borderRadius: 18,
-            background: C.bg, border: `1px solid ${C.border}`, color: C.ink,
+            position: 'absolute',
+            top: isMobile ? 8 : -14, right: isMobile ? 8 : -14,
+            width: 40, height: 40, borderRadius: 20,
+            background: isMobile ? 'rgba(10,13,16,0.82)' : C.bg,
+            backdropFilter: isMobile ? 'blur(6px)' : undefined,
+            border: `1px solid ${C.border}`, color: C.ink,
             fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
           }}>✕</button>
@@ -241,6 +253,7 @@ export function Dashboard({
 }: Props) {
   const [ready, setReady] = useState(false);
   const [openFrame, setOpenFrame] = useState<AnnotatedFrame | null>(null);
+  const isMobile = useIsMobile();
   const heading = assessmentLabel(assessmentType);
 
   useEffect(() => { const t = setTimeout(() => setReady(true), 240); return () => clearTimeout(t); }, []);
@@ -288,21 +301,21 @@ export function Dashboard({
 
       {/* ── Banner ──────────────────────────────────────────── */}
       <div style={{
-        position: 'relative', height: 200, overflow: 'hidden',
+        position: 'relative', height: 'clamp(120px, 26vw, 200px)', overflow: 'hidden',
         backgroundImage: `linear-gradient(180deg, rgba(10,13,16,0.35) 0%, ${C.bg} 94%), url(/images/dashboard/banner.jpg)`,
         backgroundSize: 'cover', backgroundPosition: 'center 28%',
         borderBottom: `1px solid ${C.border}`,
       }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'flex-end', padding: '0 32px 22px' }}>
-          <span style={{ fontFamily: F.body, fontSize: 11.5, letterSpacing: '2.5px', color: C.ink3, fontWeight: 700, textTransform: 'uppercase' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'flex-end', padding: `0 ${GUTTER} 22px` }}>
+          <span style={{ fontFamily: F.body, fontSize: isMobile ? 10 : 11.5, letterSpacing: isMobile ? '1.6px' : '2.5px', color: C.ink3, fontWeight: 700, textTransform: 'uppercase' }}>
             Coach-grade review · every rep, scored
           </span>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '56px 32px 0' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: `clamp(32px,6vw,56px) ${GUTTER} 0` }}>
         {/* ── Header ────────────────────────────────────────── */}
-        <div className="animate-fade-up" style={{ marginBottom: 48 }}>
+        <div className="animate-fade-up" style={{ marginBottom: 'clamp(30px,5vw,48px)' }}>
           <SectionLabel style={{ marginBottom: 14 }}>
             {heading} assessment · dashboard
           </SectionLabel>
@@ -329,22 +342,27 @@ export function Dashboard({
             {/* ── Overall card ─────────────────────────────── */}
             <Card pad={0} variant="raised" style={{ marginBottom: 32 }} className="animate-fade-up-1">
               <div style={{
-                display: 'grid', gridTemplateColumns: '300px 1fr', gap: 0,
+                // A hard 300px gauge rail leaves ~11px for the stats on a
+                // 375px screen — stack the gauge above them instead.
+                display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: 0,
                 alignItems: 'stretch',
               }}>
                 <div style={{
-                  padding: '36px 28px',
-                  borderRight: `1px solid ${C.border}`,
+                  padding: `clamp(26px,5vw,36px) clamp(18px,4vw,28px)`,
+                  borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
+                  borderBottom: isMobile ? `1px solid ${C.border}` : 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: C.surface,
                 }}>
-                  {ready ? <OverallGauge score={overallScore} ready={ready} />
-                         : <Skeleton w={208} h={208} radius={208} />}
+                  {ready ? <OverallGauge score={overallScore} ready={ready} size={isMobile ? 180 : 208} />
+                         : <Skeleton w={isMobile ? 180 : 208} h={isMobile ? 180 : 208} radius={208} />}
                 </div>
-                <div style={{ padding: '36px 36px' }}>
+                <div style={{ padding: `clamp(24px,5vw,36px)` }}>
                   <div style={{
+                    // Four stats across is unreadable under ~520px; 2×2 keeps
+                    // each label on one line.
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
                     gap: 18,
                     marginBottom: 28,
                   }}>
@@ -382,7 +400,7 @@ export function Dashboard({
               <div className="animate-fade-up-2"
                 style={{
                   display: 'grid', gap: 18, marginBottom: 32,
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                  gridTemplateColumns: gridCols(360),
                 }}>
                 {toImprove.length > 0 && (
                   <Card variant="raised" accent="rust">
@@ -448,10 +466,11 @@ export function Dashboard({
               <SectionLabel>All {heading.toLowerCase()} reports · {reportEntries.length}</SectionLabel>
             </div>
             <div className="animate-fade-up-3"
-              style={{ display: 'grid', gap: 20,
-                gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))' }}>
+              style={{ display: 'grid', gap: isMobile ? 14 : 20,
+                gridTemplateColumns: gridCols(440) }}>
               {reportEntries.map(e => (
                 <ExerciseCard key={e.slug} ex={e.exercise} report={e.report}
+                  isMobile={isMobile}
                   onOpen={() => onOpenReport(e.slug)}
                   onFrame={f => setOpenFrame(f)} />
               ))}
@@ -485,23 +504,30 @@ export function Dashboard({
 
         {/* ── Bottom nav ────────────────────────────────── */}
         <div style={{
-          marginTop: 56, paddingTop: 28,
+          marginTop: 'clamp(36px,6vw,56px)', paddingTop: 28,
           borderTop: `1px solid ${C.border}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex',
+          flexDirection: isMobile ? 'column-reverse' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
           gap: 12, flexWrap: 'wrap',
         }}>
-          <Button variant="ghost" size="md" onClick={onLanding}
+          <Button variant="ghost" size="md" onClick={onLanding} block={isMobile}
             iconLeft={<span style={{ fontSize: 16 }}>←</span>}>
             Home
           </Button>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+            gap: 10, flexWrap: 'wrap',
+          }}>
             {onSession && (
-              <Button variant="secondary" size="md" onClick={onSession}>
+              <Button variant="secondary" size="md" onClick={onSession} block={isMobile}>
                 Session details
               </Button>
             )}
-            <Button variant="primary" size="md" onClick={onGuide}
-              iconRight={<ArrowBadge size={30} />} style={{ paddingRight: 6 }}>
+            <Button variant="primary" size="md" onClick={onGuide} block={isMobile}
+              iconRight={<ArrowBadge size={30} />}
+              style={isMobile ? { paddingRight: 6, justifyContent: 'space-between' } : { paddingRight: 6 }}>
               All exercises
             </Button>
           </div>
