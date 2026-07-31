@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: false
 license: mit
-short_description: Computer-vision biomechanics analysis for mobility screens and barbell lifts
+short_description: Coach-grade AI movement assessment from phone video
 ---
 
 # MoveCheck — AI Movement Assessment API
