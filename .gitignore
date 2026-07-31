@@ -71,6 +71,37 @@ processor/eval/cache/
 *.bak-pre-audit-fix
 
 # ─────────────────────────────────────────────────────────────
+#  Local tooling / AI-assistant config — not part of the product
+# ─────────────────────────────────────────────────────────────
+.claude/
+.cursor/
+.aider*
+AGENTS.md
+CLAUDE.md
+
+# Personal notes kept outside the public repo
+DEPLOYMENT.md
+
+# ─────────────────────────────────────────────────────────────
+#  Scratch scripts and one-off migrations — superseded, kept
+#  locally for reference but not shipped
+# ─────────────────────────────────────────────────────────────
+sample.js
+test_analysis.py
+test_local.py
+update_exercises.js
+update_exercises.py
+
+# Design mockups (static HTML explorations, not part of the build)
+Mobility Assessment Redesign/
+Mobility Assessment Redesign */
+
+# Dead shadcn artifact: a literal "@" directory created instead of
+# resolving the "@" path alias. Nothing imports it — the real UI kit
+# lives in frontend/src/components/ui.
+frontend/@/
+
+# ─────────────────────────────────────────────────────────────
 #  Secrets / env
 # ─────────────────────────────────────────────────────────────
 .env

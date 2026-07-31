@@ -18,7 +18,20 @@ Two assessment tracks are supported:
 - [ARCHITECTURE.md](ARCHITECTURE.md) — how the analysis pipeline actually works: the
   CV/ML techniques, every third-party library and why it's used, the full request
   lifecycle, and a per-exercise breakdown of all 15 analyzers.
-- [DEPLOYMENT.md](DEPLOYMENT.md) — step-by-step guide to getting this online for free.
+
+## Deployment
+
+The stack ships as a single container image (`Dockerfile`) running all three tiers
+behind one port — the Python CV processor on loopback, the Node API public, and the
+built SPA served statically. Run it locally with:
+
+```bash
+docker compose up --build     # → http://localhost:7860
+```
+
+Every deployment-specific value is environment-driven (see
+[Configuration](#configuration)), so the same image runs unchanged locally and in
+production.
 
 ## Try it
 

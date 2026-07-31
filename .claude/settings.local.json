@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(echo \"--- src/components ---\")",
-      "Bash(find '/Volumes/KIOXIA 1/Projects Transfer : NXT : Bold /Moblity 2/frontend/src/components' -type f)"
-    ]
-  }
-}
