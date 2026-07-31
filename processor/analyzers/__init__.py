@@ -1,0 +1,1 @@
+# MobilityAI — Exercise Analyzer Package

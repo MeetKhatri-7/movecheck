@@ -1,0 +1,117 @@
+# ─────────────────────────────────────────────────────────────
+#  Dependencies
+# ─────────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# Python virtualenvs (487 MB — never commit)
+venv/
+.venv/
+**/venv/
+**/.venv/
+env/
+ENV/
+
+# ─────────────────────────────────────────────────────────────
+#  Python build artifacts
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ─────────────────────────────────────────────────────────────
+#  Frontend build output
+# ─────────────────────────────────────────────────────────────
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.local
+.vercel/
+
+# ─────────────────────────────────────────────────────────────
+#  Sample videos — 2.5 GB, far over GitHub's limits.
+#  Keep these local. The deployed demo uses the pre-generated
+#  JSON reports in demo/sample-reports/ instead.
+# ─────────────────────────────────────────────────────────────
+Sample Videos for Mobility Assessment/
+Sample Videos for Strength Assessment/
+*.mp4
+*.mov
+*.MOV
+*.MP4
+*.avi
+*.mkv
+
+# ─────────────────────────────────────────────────────────────
+#  Runtime state (regenerated at runtime; ephemeral in prod)
+# ─────────────────────────────────────────────────────────────
+backend/sessions/
+backend/temp_uploads/
+processor/eval/cache/
+*.bak-pre-audit-fix
+
+# ─────────────────────────────────────────────────────────────
+#  Secrets / env
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# ─────────────────────────────────────────────────────────────
+#  Logs
+# ─────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─────────────────────────────────────────────────────────────
+#  OS / editor
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# ─────────────────────────────────────────────────────────────
+#  MediaPipe model weights — 29 MB.
+#  NOT committed: Hugging Face requires Git LFS for files over 10 MB.
+#  The Docker image downloads it at build time (see Dockerfile), and
+#  utils/landmarks.py auto-downloads it locally on first run, so
+#  nothing breaks by leaving it out of git.
+# ─────────────────────────────────────────────────────────────
+*.task
+
+# ─────────────────────────────────────────────────────────────
+#  Kept deliberately (do NOT ignore):
+#    frontend/public/demo/*.json — the pre-generated demo reports
+#      that power the instant sample-report mode. ~12 MB total,
+#      committed on purpose so the demo works with no backend.
+# ─────────────────────────────────────────────────────────────

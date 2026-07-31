@@ -1,0 +1,226 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ─────────────────────────────────────────────────────────────
+   MoveCheck — Athletic Dark global theme
+   Fonts (Bebas Neue + Inter + JetBrains Mono) load from index.html.
+   See src/theme/tokens.ts for the matching JS tokens.
+   ────────────────────────────────────────────────────────────*/
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: 'Bebas Neue', 'Inter', sans-serif;
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Inter', sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* MoveCheck athletic-dark palette */
+  --color-stage:       #0A0D10;
+  --color-stage2:      #12171D;
+  --color-ink:         #F5F6F1;
+  --color-ink2:        #C7CCD2;
+  --color-ink3:        #8D95A0;
+  --color-ink4:        #5C636C;
+  --color-clay:        #FF5A36;
+  --color-clay-tint:   rgba(255,90,54,0.12);
+  --color-cyan:        #33C7FF;
+  --color-cyan-tint:   rgba(51,199,255,0.12);
+  --color-sage:        #22D47A;
+  --color-sage-tint:   rgba(34,212,122,0.12);
+  --color-amber:       #FFC94A;
+  --color-amber-tint:  rgba(255,201,74,0.12);
+  --color-rust:        #FF5A36;
+  --color-rust-tint:   rgba(255,90,54,0.12);
+}
+
+:root {
+  --background: #0A0D10;
+  --foreground: #F5F6F1;
+  --card: #12171D;
+  --card-foreground: #F5F6F1;
+  --popover: #12171D;
+  --popover-foreground: #F5F6F1;
+  --primary: #FF5A36;
+  --primary-foreground: #0A0D10;
+  --secondary: #171D24;
+  --secondary-foreground: #F5F6F1;
+  --muted: #171D24;
+  --muted-foreground: #8D95A0;
+  --accent: #FF5A36;
+  --accent-foreground: #0A0D10;
+  --destructive: #FF5A36;
+  --border: rgba(255,255,255,0.10);
+  --input: rgba(255,255,255,0.15);
+  --ring: rgba(255,90,54,0.40);
+  --chart-1: #FF5A36;
+  --chart-2: #33C7FF;
+  --chart-3: #FFC94A;
+  --chart-4: #22D47A;
+  --chart-5: #A855F7;
+  --radius: 0.75rem;
+  --sidebar: #12171D;
+  --sidebar-foreground: #F5F6F1;
+  --sidebar-primary: #FF5A36;
+  --sidebar-primary-foreground: #0A0D10;
+  --sidebar-accent: #171D24;
+  --sidebar-accent-foreground: #F5F6F1;
+  --sidebar-border: rgba(255,255,255,0.10);
+  --sidebar-ring: rgba(255,90,54,0.40);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    background: #0A0D10;
+    color: #F5F6F1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+  #root {
+    min-height: 100vh;
+  }
+  ::selection {
+    background: rgba(255,90,54,0.28);
+    color: #F5F6F1;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* Dark, thin scrollbars */
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+  /* Default focus ring uses the vermilion accent */
+  :focus-visible {
+    outline: 2px solid rgba(255,90,54,0.6);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ──── MoveCheck motion library ──── */
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes marquee  { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes ctaGlow  { 0%,100% { box-shadow: 0 0 0 0 rgba(255,90,54,0.0); } 50% { box-shadow: 0 0 32px 4px rgba(255,90,54,0.20); } }
+@keyframes float    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+@keyframes growBar  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pulseSaved { 0%,100% { box-shadow: 0 0 0 0 rgba(34,212,122,0.35); } 50% { box-shadow: 0 0 0 6px rgba(34,212,122,0); } }
+@keyframes slideUpFooter { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes spin     { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes ringGlow { 0%,100% { filter: drop-shadow(0 0 6px rgba(255,90,54,0.4)); } 50% { filter: drop-shadow(0 0 16px rgba(255,90,54,0.75)); } }
+@keyframes ringRotate { to { transform: rotate(360deg); } }
+@keyframes shimmer  { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+@keyframes pulseSoft { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+.animate-fade-up   { animation: fadeUp 0.6s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-up-1 { animation: fadeUp 0.6s 0.06s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-up-2 { animation: fadeUp 0.6s 0.12s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-up-3 { animation: fadeUp 0.6s 0.18s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-up-4 { animation: fadeUp 0.6s 0.24s cubic-bezier(.16,1,.3,1) both; }
+.animate-fade-in   { animation: fadeIn 0.45s ease-out both; }
+.animate-pulse-soft{ animation: pulseSoft 2.2s ease-in-out infinite; }
+.animate-spin-slow { animation: spin 8s linear infinite; }
+
+/* Skeleton shimmer (light sweep on dark) */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.05) 25%,
+    rgba(255,255,255,0.10) 37%,
+    rgba(255,255,255,0.05) 63%);
+  background-size: 400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Athletic display headlines: Bebas Neue, condensed all-caps */
+.display { font-family: 'Bebas Neue', 'Inter', sans-serif; font-weight: 400; letter-spacing: 0.4px; }
+.display em { font-style: normal; color: #FF5A36; }
+.label-caps {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8D95A0;
+}
+
+/* Glass card hover lift — shared across feature/rule/exercise cards */
+.mc-card-hover:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255,90,54,0.35) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+}
+
+/* Nav tagline appears only on wide screens */
+@media (min-width: 900px) { .mc-nav-tag { display: inline !important; } }
+
+/* Hero collapses to a single column on narrow screens; hide the floating
+   visual on very small screens where it competes with the copy. */
+@media (max-width: 860px) {
+  .mc-hero { grid-template-columns: 1fr !important; }
+  .mc-hero-visual { max-width: 420px; }
+}
+@media (max-width: 560px) {
+  .mc-hero-visual { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,66 @@
+# Keep the Docker build context small and the image lean.
+# Anything not needed AT RUNTIME inside the container belongs here.
+
+# Dependencies — reinstalled inside the image
+node_modules/
+**/node_modules/
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend build output — the image builds it fresh (or doesn't need it)
+frontend/dist/
+frontend/.vite/
+
+# Sample videos — 2.5 GB, never needed in the image
+Sample Videos for Mobility Assessment/
+Sample Videos for Strength Assessment/
+*.mp4
+*.mov
+*.MOV
+*.MP4
+
+# Runtime state — created fresh in the container
+backend/sessions/
+backend/temp_uploads/
+processor/eval/cache/
+
+# MediaPipe model weights — the Dockerfile downloads these at build time,
+# so keeping the 29 MB file out of the build context speeds every build.
+*.task
+
+# Dev-only tooling not used at runtime
+processor/eval/
+.git/
+.github/
+.vercel/
+
+# Docs (not needed at runtime, but keep the build context tidy)
+*.md
+!deploy/hf-space/README.md
+Specification Files/
+Mobility Assessment Redesign/
+
+# Local scratch scripts
+test_analysis.py
+test_local.py
+sample.js
+update_exercises.js
+update_exercises.py
+
+# Secrets / OS
+.env
+.env.*
+!.env.example
+.DS_Store
+**/.DS_Store
+*.log

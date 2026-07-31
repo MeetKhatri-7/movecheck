@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #0A0D10; }
+    * { box-sizing: border-box; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+    @keyframes ctaGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,90,54,0.0); } 50% { box-shadow: 0 0 32px 4px rgba(255,90,54,0.18); } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    a { color: #FF5A36; text-decoration: none; }
+    a:hover { color: #FF8A6B; }
+  </style>
+</helmet>
+<div style="background:#0A0D10; min-height:100vh; font-family:'Inter',sans-serif; color:#F5F6F1; overflow-x:hidden;" data-screen-label="Landing">
+
+  <!-- NAV -->
+  <nav style="display:flex; align-items:center; justify-content:space-between; padding:22px 48px; border-bottom:1px solid rgba(255,255,255,0.08); position:sticky; top:0; background:rgba(10,13,16,0.85); backdrop-filter:blur(10px); z-index:50;">
+    <div style="display:flex; align-items:baseline; gap:6px;">
+      <span style="font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:0.5px; color:#F5F6F1;">MOVE<span style="color:#FF5A36;">//</span>CHECK</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:28px;">
+      <span style="font-size:11px; letter-spacing:1.5px; color:#6C7480; font-weight:600; text-transform:uppercase;">Movement Assessment · By Film</span>
+      <button style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); color:#F5F6F1; padding:10px 20px; border-radius:999px; font-size:13px; font-weight:600; letter-spacing:0.3px; cursor:pointer; font-family:'Inter',sans-serif; transition:border-color .2s ease, color .2s ease;" style-hover="border-color:rgba(255,90,54,0.5); color:#FF5A36;">My Session</button>
+    </div>
+  </nav>
+
+  <!-- MARQUEE -->
+  <div style="background:#FF5A36; overflow:hidden; padding:9px 0; border-bottom:2px solid #0A0D10; transform:skewY(-0.6deg); margin-top:-1px;">
+    <div style="display:flex; width:max-content; animation:marquee 22s linear infinite;">
+      <span style="display:flex; gap:36px; padding-right:36px; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px; color:#0A0D10; white-space:nowrap;">
+        <span>10 MOBILITY TESTS</span><span>&#9670;</span><span>5 STRENGTH LIFTS</span><span>&#9670;</span><span>PHONE-ONLY CAPTURE</span><span>&#9670;</span><span>COACH-GRADE AI</span><span>&#9670;</span><span>ZERO GUESSWORK</span><span>&#9670;</span>
+      </span>
+      <span style="display:flex; gap:36px; padding-right:36px; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px; color:#0A0D10; white-space:nowrap;" aria-hidden="true">
+        <span>10 MOBILITY TESTS</span><span>&#9670;</span><span>5 STRENGTH LIFTS</span><span>&#9670;</span><span>PHONE-ONLY CAPTURE</span><span>&#9670;</span><span>COACH-GRADE AI</span><span>&#9670;</span><span>ZERO GUESSWORK</span><span>&#9670;</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section style="padding:96px 48px 80px; display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center; max-width:1560px; margin:0 auto;">
+    <div style="animation:fadeUp 0.7s ease both;">
+      <div style="font-size:12px; letter-spacing:2px; color:#FF5A36; font-weight:700; margin-bottom:22px; text-transform:uppercase;">10 Mobility Tests · 5 Strength Lifts</div>
+      <h1 style="font-family:'Bebas Neue',sans-serif; font-size:108px; line-height:0.92; letter-spacing:0.5px; margin:0 0 28px; color:#F5F6F1;">
+        KNOW HOW<br>YOUR BODY<br><span style="color:#FF5A36;">MOVES.</span>
+      </h1>
+      <p style="font-size:17px; line-height:1.7; color:#A6ADB6; max-width:480px; margin:0 0 40px; font-weight:400;">
+        Two tracks, one honest profile. Mobility tests how your joints move; Strength tests how much force you produce. Record a few clips, get a coach-grade report back — no guesswork, no gym jargon.
+      </p>
+      <div style="display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap;">
+        <button style="display:flex; align-items:center; gap:14px; background:#FF5A36; color:#0A0D10; border:none; padding:8px 8px 8px 26px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:0.4px; cursor:pointer; font-family:'Inter',sans-serif; animation:ctaGlow 3s ease-in-out infinite; transition:transform .2s ease;" style-hover="transform:scale(1.04);">
+          BEGIN MOBILITY
+          <span style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:#0A0D10; color:#FF5A36; font-size:16px;">&#8594;</span>
+        </button>
+        <button style="display:flex; align-items:center; gap:14px; background:rgba(255,255,255,0.05); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); color:#F5F6F1; border:1px solid rgba(255,255,255,0.22); padding:8px 8px 8px 26px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:0.4px; cursor:pointer; font-family:'Inter',sans-serif; transition:transform .2s ease, border-color .2s ease;" style-hover="transform:scale(1.04); border-color:rgba(255,90,54,0.5);">
+          BEGIN STRENGTH
+          <span style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.1); color:#F5F6F1; font-size:16px;">&#8594;</span>
+        </button>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:1px; color:#5C636C; font-weight:600; text-transform:uppercase;">
+        <span>Shortcuts</span>
+        <span style="border:1px solid rgba(255,255,255,0.15); border-radius:3px; padding:3px 7px; color:#8D95A0;">&#8629;</span><span>start mobility</span>
+        <span style="border:1px solid rgba(255,255,255,0.15); border-radius:3px; padding:3px 7px; color:#8D95A0;">M</span>
+        <span style="border:1px solid rgba(255,255,255,0.15); border-radius:3px; padding:3px 7px; color:#8D95A0;">S</span><span>pick a track</span>
+      </div>
+    </div>
+
+    <div style="position:relative; animation:fadeUp 0.9s ease 0.15s both, float 5s ease-in-out 1s infinite;">
+      <div style="position:relative; aspect-ratio:4/5; border-radius:28px; background:linear-gradient(155deg,#171D24 0%,#0A0D10 55%,#12171D 100%); overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(115deg, rgba(255,90,54,0.06) 0px, rgba(255,90,54,0.06) 2px, transparent 2px, transparent 26px);"></div>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;">
+          <span style="font-family:'Bebas Neue',sans-serif; font-size:150px; color:rgba(255,90,54,0.9); line-height:1;">M</span>
+          <span style="font-size:11px; letter-spacing:3px; color:#5C636C; font-weight:700; text-transform:uppercase; font-family:'Inter',sans-serif;">Replace with hero athlete photo</span>
+        </div>
+        <div style="position:absolute; top:24px; right:24px; background:rgba(10,13,16,0.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,90,54,0.4); padding:14px 18px; border-radius:14px;">
+          <div style="font-size:10px; letter-spacing:1.5px; color:#6C7480; font-weight:700; margin-bottom:6px; text-transform:uppercase;">Squat Depth</div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:34px; color:#FF5A36;">{{ scoreCounter }}<span style="font-size:16px; color:#5C636C;">/100</span></div>
+        </div>
+        <div style="position:absolute; bottom:24px; left:24px; display:flex; align-items:center; gap:8px; background:rgba(10,13,16,0.5); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.12); padding:9px 14px; border-radius:20px;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#33C7FF; animation:pulseDot 1.4s ease-in-out infinite;"></span>
+          <span style="font-size:11px; letter-spacing:1px; color:#D6DADD; font-weight:600;">33 KEYPOINTS &middot; LIVE</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="padding:0 48px 100px; max-width:1560px; margin:0 auto;">
+    <div ref="{{ featuresRef }}" style="display:grid; grid-template-columns:repeat(4,1fr); gap:18px; opacity:{{ featuresOpacity }}; transform:{{ featuresTransform }}; transition:opacity .7s ease, transform .7s ease;">
+      <div style="background:rgba(255,255,255,0.045); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:18px; padding:34px 28px; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-6px); border-color:rgba(255,90,54,0.35); box-shadow:0 16px 40px rgba(0,0,0,0.35);">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,90,54,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px; transition:transform .3s ease;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg></div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.4px; margin-bottom:10px;">PHONE-ONLY SETUP</div>
+        <div style="font-size:14px; line-height:1.6; color:#8D95A0;">Record on the phone you already have. No wearables, no gym membership.</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.045); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:18px; padding:34px 28px; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-6px); border-color:rgba(255,90,54,0.35); box-shadow:0 16px 40px rgba(0,0,0,0.35);">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,90,54,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.4px; margin-bottom:10px;">COACH-GRADE AI</div>
+        <div style="font-size:14px; line-height:1.6; color:#8D95A0;">MediaPipe Pose + custom biomechanics — same metrics a strength coach reads.</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.045); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:18px; padding:34px 28px; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-6px); border-color:rgba(255,90,54,0.35); box-shadow:0 16px 40px rgba(0,0,0,0.35);">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,90,54,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.4px; margin-bottom:10px;">HONEST REPORTS</div>
+        <div style="font-size:14px; line-height:1.6; color:#8D95A0;">Per-rep faults with timing, confidence pills, side-by-side bilateral comparison.</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.045); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:18px; padding:34px 28px; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-6px); border-color:rgba(255,90,54,0.35); box-shadow:0 16px 40px rgba(0,0,0,0.35);">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,90,54,0.12); display:flex; align-items:center; justify-content:center; margin-bottom:20px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.4px; margin-bottom:10px;">TRACK PROGRESS</div>
+        <div style="font-size:14px; line-height:1.6; color:#8D95A0;">Every session saved. Re-test the same lift weekly to see real change.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section style="position:relative; background:#12171D; padding:120px 48px 100px; clip-path:polygon(0 3.5%, 100% 0, 100% 100%, 0 100%);">
+    <div style="max-width:1100px; margin:0 auto; text-align:center;">
+      <div style="font-size:12px; letter-spacing:2.5px; color:#33C7FF; font-weight:700; margin-bottom:20px; text-transform:uppercase;">Required Reading Before You Film</div>
+      <h2 style="font-family:'Bebas Neue',sans-serif; font-size:64px; letter-spacing:0.5px; margin:0 0 24px; line-height:1.02;">SEVEN RULES FOR <span style="color:#FF5A36;">CLEAN FOOTAGE.</span></h2>
+      <p style="font-size:16px; line-height:1.7; color:#8D95A0; max-width:620px; margin:0 auto 64px;">The analyzer is opinionated — small camera-angle mistakes shave 10+ accuracy points off your report. Treat these like a checklist, not suggestions.</p>
+    </div>
+
+    <div ref="{{ rulesRef }}" style="max-width:1080px; margin:0 auto; display:grid; grid-template-columns:repeat(2,1fr); gap:16px; opacity:{{ rulesOpacity }}; transform:{{ rulesTransform }}; transition:opacity .7s ease, transform .7s ease;">
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 01</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Well-lit space</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">Plain background where possible.</div>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 02</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Propped phone</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">Use a tripod or a stable surface — never hand-held.</div>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 03</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Fitted clothing</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">Joints must be visible. Avoid baggy shorts or tops.</div>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 04</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Exact camera angle</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">The angle listed for each exercise is the angle we score.</div>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 05</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Slow, controlled reps</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">Three good reps beat ten messy ones.</div>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; gap:18px; background:rgba(255,255,255,0.05); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.4); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.14); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 06</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Both sides, separately</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">For unilateral exercises, film left and right separately.</div>
+        </div>
+      </div>
+      <div style="grid-column:1 / -1; position:relative; display:flex; gap:18px; background:linear-gradient(135deg, rgba(255,90,54,0.08), rgba(51,199,255,0.05)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid rgba(255,90,54,0.25); border-radius:16px; padding:24px; overflow:hidden; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;" style-hover="transform:translateY(-4px); border-color:rgba(255,90,54,0.55); box-shadow:0 16px 36px rgba(0,0,0,0.35);">
+        <div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:rgba(255,90,54,0.16); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg></div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:#FF5A36; margin-bottom:4px;">RULE 07</div>
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">One take per clip</div>
+          <div style="font-size:13px; color:#8D95A0; line-height:1.6;">Trim before uploading; the analyzer expects a single attempt.</div>
+        </div>
+      </div>
+    </div>
+
+    <div ref="{{ ctaRef }}" style="display:flex; flex-direction:column; align-items:center; gap:16px; margin-top:72px; opacity:{{ ctaOpacity }}; transform:{{ ctaTransform }}; transition:opacity .7s ease, transform .7s ease;">
+      <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
+        <button style="display:flex; align-items:center; gap:14px; background:#FF5A36; color:#0A0D10; border:none; padding:8px 8px 8px 26px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:0.4px; cursor:pointer; font-family:'Inter',sans-serif; transition:transform .2s ease;" style-hover="transform:scale(1.04);">BEGIN MOBILITY <span style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:#0A0D10; color:#FF5A36; font-size:16px;">&#8594;</span></button>
+        <button style="display:flex; align-items:center; gap:14px; background:rgba(255,255,255,0.05); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); color:#F5F6F1; border:1px solid rgba(255,255,255,0.22); padding:8px 8px 8px 26px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:0.4px; cursor:pointer; font-family:'Inter',sans-serif; transition:transform .2s ease, border-color .2s ease;" style-hover="transform:scale(1.04); border-color:rgba(255,90,54,0.5);">BEGIN STRENGTH <span style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.1); color:#F5F6F1; font-size:16px;">&#8594;</span></button>
+      </div>
+      <div style="font-size:11px; letter-spacing:1.5px; color:#5C636C; font-weight:700; text-transform:uppercase;">Choose a track &middot; do both for your full profile</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="padding:26px 48px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:11px; letter-spacing:1.5px; color:#5C636C; font-weight:700; text-transform:uppercase;">MoveCheck &middot; V2 &middot; Athletic Release</span>
+    <span style="font-family:'Bebas Neue',sans-serif; font-size:18px; color:#3A4048;">MOVE//CHECK</span>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { scoreCounter: 0, featuresIn: false, rulesIn: false, ctaIn: false };
+
+  componentDidMount() {
+    const target = 87;
+    const duration = 1200;
+    const start = performance.now();
+    const tick = (now) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const val = Math.round(progress * target);
+      this.setState({ scoreCounter: val });
+      if (progress < 1) {
+        this._raf = requestAnimationFrame(tick);
+      }
+    };
+    this._raf = requestAnimationFrame(tick);
+
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        if (entry.target === this._featuresEl) this.setState({ featuresIn: true });
+        if (entry.target === this._rulesEl) this.setState({ rulesIn: true });
+        if (entry.target === this._ctaEl) this.setState({ ctaIn: true });
+        this._observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 });
+
+    [this._featuresEl, this._rulesEl, this._ctaEl].forEach((el) => {
+      if (el) this._observer.observe(el);
+    });
+  }
+
+  componentWillUnmount() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._observer) this._observer.disconnect();
+  }
+
+  renderVals() {
+    const { featuresIn, rulesIn, ctaIn } = this.state;
+    return {
+      scoreCounter: this.state.scoreCounter,
+      featuresRef: (el) => { this._featuresEl = el; },
+      rulesRef: (el) => { this._rulesEl = el; },
+      ctaRef: (el) => { this._ctaEl = el; },
+      featuresOpacity: featuresIn ? 1 : 0,
+      featuresTransform: featuresIn ? 'translateY(0)' : 'translateY(28px)',
+      rulesOpacity: rulesIn ? 1 : 0,
+      rulesTransform: rulesIn ? 'translateY(0)' : 'translateY(28px)',
+      ctaOpacity: ctaIn ? 1 : 0,
+      ctaTransform: ctaIn ? 'translateY(0)' : 'translateY(20px)',
+    };
+  }
+}
+
+</script>
+</body>
+</html>

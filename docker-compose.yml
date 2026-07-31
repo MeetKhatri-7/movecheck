@@ -1,0 +1,46 @@
+# Local production-parity stack.
+#
+#   docker compose up --build
+#   → http://localhost:7860
+#
+# This builds and runs the SAME image that gets deployed, so if it works here
+# it works on the host. Use this to validate a change before pushing.
+
+services:
+  movecheck:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: movecheck:local
+    container_name: movecheck
+    ports:
+      - "7860:7860"
+    environment:
+      PORT: "7860"
+      PROCESSOR_HOST: "127.0.0.1"
+      PROCESSOR_PORT: "5001"
+      PYTHON_URL: "http://127.0.0.1:5001"
+      SERVE_STATIC_DIR: "/app/frontend/dist"
+      SESSION_DIR: "/tmp/sessions"
+      UPLOAD_DIR: "/tmp/uploads"
+      # Allow any origin locally so a separately-run Vite dev server
+      # (localhost:5173) can talk to this container.
+      CORS_ORIGIN: "*"
+      HOT_RELOAD: "0"
+      MAX_UPLOAD_MB: "512"
+      PROCESS_TIMEOUT_MS: "900000"
+    # Pose estimation is CPU-bound and memory-hungry. These mirror the
+    # free-tier ceiling on Hugging Face Spaces (2 vCPU / 16 GB) so local
+    # testing surfaces the same limits production will hit.
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7860/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    restart: unless-stopped

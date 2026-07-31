@@ -1,0 +1,125 @@
+{
+  "generated": "2026-07-31T06:53:01Z",
+  "reports": [
+    {
+      "assessmentType": "mobility",
+      "slug": "knee-to-wall-test",
+      "score": 86,
+      "status": "GOOD",
+      "summary": "Analysed 6/6 valid reps across both sides. Good ankle dorsiflexion range.",
+      "annotatedFrames": 6,
+      "file": "mobility__knee-to-wall-test.json",
+      "bytes": 2043768
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "seated-hip-rotation-test",
+      "score": 93,
+      "status": "GOOD",
+      "summary": "Analysed 12/12 valid reps across both hips.",
+      "annotatedFrames": 12,
+      "file": "mobility__seated-hip-rotation-test.json",
+      "bytes": 3784948
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "thoracic-extension",
+      "score": 100,
+      "status": "GOOD",
+      "summary": "Thoracic extension analysis complete. Good thoracic extension mobility.",
+      "annotatedFrames": 1,
+      "file": "mobility__thoracic-extension.json",
+      "bytes": 121421
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "quadruped-rotation",
+      "score": 62,
+      "status": "NEEDS IMPROVEMENT",
+      "summary": "Analysed 6/6 reps across both sides. Partial rotation \u2014 focus on thread-the-needle progressions.",
+      "annotatedFrames": 2,
+      "file": "mobility__quadruped-rotation.json",
+      "bytes": 310802
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "shoulder-rotation-90-90",
+      "score": 70,
+      "status": "NEEDS IMPROVEMENT",
+      "summary": "Analysed 12/12 reps across both shoulders. Clinical flags detected \u2014 review coaching notes carefully.",
+      "annotatedFrames": 4,
+      "file": "mobility__shoulder-rotation-90-90.json",
+      "bytes": 512085
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "single-leg-glute-bridge",
+      "score": 100,
+      "status": "GOOD",
+      "summary": "Analysed 6/6 reps across both sides. Strong glute bridge performance with stable holds.",
+      "annotatedFrames": 6,
+      "file": "mobility__single-leg-glute-bridge.json",
+      "bytes": 798351
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "dead-bug",
+      "score": 93,
+      "status": "GOOD",
+      "summary": "Analysed 8/8 movements (5 left, 3 right). Excellent core stability \u2014 no lumbar compensation detected.",
+      "annotatedFrames": 8,
+      "file": "mobility__dead-bug.json",
+      "bytes": 1003328
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "hollow-body-hold",
+      "score": 71,
+      "status": "NEEDS IMPROVEMENT",
+      "summary": "Analysed 3/3 valid holds. Partial position achieved \u2014 focus on lowering legs while keeping lumbar contact.",
+      "annotatedFrames": 3,
+      "file": "mobility__hollow-body-hold.json",
+      "bytes": 340980
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "plank-shoulder-tap",
+      "score": 100,
+      "status": "GOOD",
+      "summary": "Analysed 16/16 taps (8L + 8R). Strong anti-rotation control \u2014 minimal hip drop and rotation.",
+      "annotatedFrames": 16,
+      "file": "mobility__plank-shoulder-tap.json",
+      "bytes": 2049638
+    },
+    {
+      "assessmentType": "mobility",
+      "slug": "prone-y-t-w-raise",
+      "score": 81,
+      "status": "GOOD",
+      "summary": "Analysed 9/9 reps across 3 shapes. Good scapular control across all shapes.",
+      "annotatedFrames": 6,
+      "file": "mobility__prone-y-t-w-raise.json",
+      "bytes": 1123247
+    },
+    {
+      "assessmentType": "strength",
+      "slug": "deadlift",
+      "score": 81,
+      "status": "GOOD",
+      "summary": "Good (B) \u00b7 composite 81/100. Safety 84, Technique 75, Performance 88.",
+      "annotatedFrames": 1,
+      "file": "strength__deadlift.json",
+      "bytes": 125575
+    },
+    {
+      "assessmentType": "strength",
+      "slug": "back-squat",
+      "score": 74,
+      "status": "NEEDS IMPROVEMENT",
+      "summary": "High bar squat \u2014 workable, C grade \u2014 fixable. Composite 74/100 (doc \u00a77-style 5-tier scoring).",
+      "annotatedFrames": 3,
+      "file": "strength__back-squat.json",
+      "bytes": 340181
+    }
+  ]
+}

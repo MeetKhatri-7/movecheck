@@ -1,0 +1,181 @@
+# MobilityAI / MoveCheck
+
+Computer-vision-powered movement assessment platform. Users film themselves performing a
+mobility screen or a strength lift on their phone; the system runs pose estimation and
+biomechanical analysis on the footage and returns a scored report — per-metric breakdowns,
+left/right asymmetry, coaching notes, and annotated frames with angle overlays.
+
+Two assessment tracks are supported:
+
+- **Mobility** — 10 screening exercises (ankle dorsiflexion, hip rotation, thoracic
+  extension, shoulder ROM, core stability tests, etc.) scored against clinical-style
+  GOOD / NEEDS IMPROVEMENT / RESTRICTED thresholds.
+- **Strength** — 5 compound lifts (back squat, deadlift, bench press, pull-up, overhead
+  press) scored against a full biomechanical rubric (safety / technique / performance)
+  with bar-path tracking, rep-by-rep fault detection, and estimated 1RM.
+
+For a deep dive into *how* the analysis pipeline actually works — the CV/ML techniques,
+every third-party library and why it's used, and the full request lifecycle — see
+[ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
+## Architecture at a glance
+
+```
+React/Vite :5173          Node/Express :3001         Python/Flask :5001
+┌─────────────────┐       ┌──────────────────┐       ┌──────────────────────┐
+│ Upload videos    │──────▶│ Job queue (Map)  │──────▶│ MediaPipe pose        │
+│ Poll job status   │POST/  │ Session persist  │POST   │ OpenCV geometry/CV    │
+│ Render report     │GET    │ (backend/sessions│multi- │ Per-exercise analyzer │
+└─────────────────┘       │  /*.json)         │part   │ Returns result dict   │
+                           └──────────────────┘       └──────────────────────┘
+```
+
+- The **frontend** never talks to Python directly — it only calls Node.
+- **Node** owns the async job queue and the durable session store; it proxies the
+  actual video bytes to Python as multipart form data and polls nothing (Python's
+  response *is* the job result).
+- **Python** is stateless: it receives files, runs the analyzer for
+  `(assessment_type, slug)`, and returns a plain result dict. It never touches
+  sessions or the job queue.
+
+Full request lifecycle, module reload behavior, and calibration data flow are documented
+in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
+## Repository layout
+
+```
+backend/                   Node/Express API — job queue, session persistence, proxy to Python
+  server.js                 All routes
+  lib/sessionStore.js        Atomic per-session JSON read/write with a write mutex
+  sessions/*.json            Durable session state (one file per session)
+  temp_uploads/               Scratch dir for in-flight multipart uploads (auto-cleaned)
+
+processor/                 Python/Flask CV service — MediaPipe + OpenCV analysis
+  app.py                    Flask entrypoint — /process, /health
+  analyzer_router.py         Maps (assessmentType, slug) → analyzer module; hot-reloads on edit
+  analyzers/
+    mobility/                 10 exercise analyzers (knee_to_wall.py, dead_bug.py, ...)
+    strength/                  5 lift analyzers (back_squat.py, deadlift.py, ...)
+  utils/                     Shared CV/scoring primitives (see ARCHITECTURE.md)
+  templates/                 DTW reference-rep templates per lift (JSON)
+  eval/                      Ground-truth evaluation harness + landmark cache
+  pose_landmarker_heavy.task  Cached MediaPipe pose model (auto-downloaded if missing)
+  requirements.txt
+
+frontend/                  React 19 + TypeScript + Vite SPA
+  src/pages/                 Landing, ExerciseGuide, Instruction, Processing, Result, Dashboard, Sessions
+  src/context/AppContext.tsx  Single app-wide state provider (uploads, reports, profile, session)
+  src/data/                  Exercise registry, TypeScript result types, upload-key namespacing
+  src/assessments/            Per-track exercise metadata (mobility/strength)
+  src/services/               api.ts (Node HTTP calls), session.ts (session bootstrap)
+  src/components/              UI kit + shared report widgets (radar chart, muscle map, histograms)
+
+Specification Files/       Authoritative threshold/spec docs per exercise (source of truth
+                             for scoring bands — consult before changing analyzer thresholds)
+Sample Videos for .../     Reference footage for manual testing and the eval harness
+start.sh                   Launches all three servers concurrently
+```
+
+---
+
+## Prerequisites
+
+- **Node.js** (for `backend/` and `frontend/`)
+- **Python 3.9** with a virtualenv at `processor/venv/` — dependencies are pre-installed
+  there (see `processor/requirements.txt` for the package list: MediaPipe, OpenCV, SciPy,
+  filterpy, scikit-learn, dtaidistance, PyYAML)
+- A webcam-free workflow: all video input comes from **uploaded files**, not live capture
+
+There is no `requirements.txt`-driven fresh install step documented for the venv — it's
+expected to already exist. If it doesn't, create one and `pip install -r
+processor/requirements.txt`.
+
+---
+
+## Running the stack
+
+Start everything at once:
+
+```bash
+./start.sh
+```
+
+This starts, in order: the Python processor (port 5001), the Node backend (port 3001),
+and the Vite dev server (port 5173). Open **http://localhost:5173**.
+
+Or run each service individually:
+
+```bash
+# Python processor — CV/ML analysis
+cd processor && source venv/bin/activate && python app.py
+
+# Node backend — API, job queue, sessions
+cd backend && node server.js
+
+# React frontend — dev server with HMR
+cd frontend && npm run dev
+```
+
+Frontend build commands:
+
+```bash
+cd frontend
+npm run build     # tsc -b && vite build
+npm run lint       # eslint .
+npm run preview    # preview the production build
+```
+
+There are no automated tests in this repo (aside from the Python `processor/eval/`
+ground-truth harness, which is a manual accuracy-gating tool, not CI).
+
+---
+
+## How a request flows through the system
+
+1. User uploads one or more videos on the **Instruction** page and hits *Analyse*.
+2. Frontend `POST`s multipart form data to
+   `/api/assessments/:type/:slug/analyse` on Node, which immediately returns a `jobId`
+   and continues processing asynchronously.
+3. Node forwards the files (plus calibration params like `tibiaLengthCm` or
+   `plateSizeKg`) to Python's `POST /process`.
+4. Python's `analyzer_router.route_analysis()` looks up the exercise-specific `analyse()`
+   function, extracts MediaPipe pose landmarks from each video, runs the exercise's
+   biomechanics logic, and returns a scored result dict.
+5. Node stores the result on the in-memory job and (if a session is active) persists it
+   to `backend/sessions/<sessionId>.json`.
+6. Frontend polls `GET /api/jobs/:jobId` until `status: 'complete'`, then renders the
+   **Result** page — metrics, bilateral comparison, coaching notes, annotated frames.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown of what happens *inside*
+step 4 — pose extraction, signal smoothing, rep detection, calibration, scoring, and
+frame annotation — and which library does what.
+
+---
+
+## Adding a new exercise/analyzer
+
+1. Create `processor/analyzers/<type>/<slug_underscored>.py` with an `analyse(files,
+   **kwargs)` function returning the standard result shape.
+2. Register it in `processor/analyzer_router.py` under `ANALYZERS[type][slug]`.
+3. Add the slug to `backend/server.js` (`MOBILITY_SLUG_TO_ID` or `STRENGTH_SLUGS`).
+4. Add the exercise definition to `frontend/src/assessments/<type>/exercises.ts`.
+
+The router uses `inspect.signature` to pass only the kwargs each analyzer's `analyse()`
+actually declares, so there's no need for a catch-all `**kwargs` and unknown params are
+silently dropped.
+
+---
+
+## Spec documents (source of truth for thresholds)
+
+- `Specification Files/AI_Metrics_Specification-Mobility.md` — all 10 mobility exercises
+- `Specification Files/AI_Metrics_Specification-Strength.md` — all 5 strength exercises
+- `Specification Files/*-rewrite.md`, `*_assessment_system.md` — per-lift deep specs for
+  the strength analyzers (bench press, deadlift, back squat, pull-up)
+
+When editing analyzer thresholds or scoring, these documents are authoritative — analyzer
+code comments reference specific section numbers (e.g. "spec §7.4") for traceability.
