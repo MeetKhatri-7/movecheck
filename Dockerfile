@@ -45,37 +45,49 @@ RUN npm ci --omit=dev
 
 
 # ───────────────────────────────────────────────────────────────────
-#  Stage 3 — runtime: Python 3.11 + Node 20 + the app
+#  Stage 3 — runtime: Node 20 (base) + Python 3.11 (from Debian)
+#
+#  Base is the Node image and Python comes from apt, rather than the
+#  reverse. Debian Bookworm ships Python 3.11 — exactly the version
+#  MediaPipe publishes wheels for — so both runtimes are native to the
+#  image. Copying a Node binary into a Python image "works" until a
+#  shared-library mismatch breaks it at runtime; this avoids that class
+#  of failure entirely.
 # ───────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
+FROM node:20-slim AS runtime
 
-# System libraries.
-#   libglib2.0-0 : required by opencv (even the headless build)
-#   ffmpeg       : video demuxing/decoding backend for cv2.VideoCapture.
-#                  Without it, many phone-recorded .mp4/.mov files fail to open.
-#   curl         : used by the container HEALTHCHECK
-# opencv-contrib-python-headless needs NO libgl1/X11 — that is why the
-# headless variant is pinned in requirements.txt.
+# System packages.
+#   python3 / venv  : Bookworm's Python 3.11
+#   libglib2.0-0    : required by OpenCV, even the headless build
+#   ffmpeg          : the decoder backend behind cv2.VideoCapture. Without it
+#                     many phone-recorded .mp4/.mov files simply fail to open.
+#   curl            : used by the HEALTHCHECK and by deploy/start.sh
+# opencv-contrib-python-headless needs no libgl1/X11 — that is exactly why
+# the headless variant is pinned in requirements.txt.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-venv \
         libglib2.0-0 \
         ffmpeg \
         curl \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Node 20 runtime, copied from the official image rather than installed via
-# apt (Debian's nodejs package is far older than what the backend needs).
-COPY --from=frontend-builder /usr/local/bin/node /usr/local/bin/node
-COPY --from=frontend-builder /usr/local/lib/node_modules /usr/local/lib/node_modules
-RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+# Debian marks its system Python as externally managed (PEP 668), so pip
+# cannot install into it. A venv is the supported path — and putting it on
+# PATH means `python`/`pip`/`gunicorn` resolve to it with no activation.
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /app
 
 # ── Python dependencies ──────────────────────────────────────────
-# Copied alone first so the (slow, ~1 GB) CV install layer is cached and only
-# reruns when requirements.txt actually changes.
+# Copied alone first so the slow (~1 GB) CV install layer stays cached and
+# only reruns when requirements.txt actually changes.
 COPY processor/requirements.txt /app/processor/requirements.txt
-RUN pip install --no-cache-dir -r /app/processor/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r /app/processor/requirements.txt
 
 # ── Application code ─────────────────────────────────────────────
 COPY processor/ /app/processor/
@@ -89,9 +101,12 @@ COPY --from=frontend-builder /build/dist        /app/frontend/dist
 # repo. Baking it in also avoids a 29 MB download on every cold start —
 # utils/landmarks.py would otherwise fetch it at runtime on first use.
 # Placed AFTER the code COPY so it is never overwritten by a stale local copy.
-ADD --chmod=644 \
-    https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task \
-    /app/processor/pose_landmarker_heavy.task
+# Uses curl rather than `ADD <url>` because ADD with --chmod on a remote URL
+# needs BuildKit; this works on any builder.
+RUN curl -fsSL -o /app/processor/pose_landmarker_heavy.task \
+      https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task \
+    && chmod 644 /app/processor/pose_landmarker_heavy.task \
+    && test -s /app/processor/pose_landmarker_heavy.task
 
 # (Demo reports live in frontend/public/demo and are already inside the
 #  built dist copied above — no separate COPY needed.)
@@ -114,14 +129,14 @@ ENV PYTHONUNBUFFERED=1 \
     PROCESS_TIMEOUT_MS=900000 \
     CORS_ORIGIN=*
 
-# Hosted platforms (Hugging Face Spaces) run containers as a non-root user
-# with UID 1000. Writable runtime dirs must exist and be owned by it, and
-# HOME must be writable because MediaPipe/matplotlib write caches there.
-RUN useradd -m -u 1000 appuser \
-    && mkdir -p /tmp/sessions /tmp/uploads \
-    && chown -R appuser:appuser /app /tmp/sessions /tmp/uploads
-USER appuser
-ENV HOME=/home/appuser
+# Run unprivileged. Hugging Face Spaces expects UID 1000; the node image
+# already provides exactly that as the `node` user, so reuse it rather than
+# creating a second account on the same UID (useradd would fail).
+# HOME must be writable — MediaPipe and friends write caches there.
+RUN mkdir -p /tmp/sessions /tmp/uploads \
+    && chown -R node:node /app /tmp/sessions /tmp/uploads
+USER node
+ENV HOME=/home/node
 
 EXPOSE 7860
 
