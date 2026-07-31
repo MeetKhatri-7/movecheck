@@ -1,0 +1,75 @@
+# What NOT to upload to Google Cloud Build.
+#
+# CRITICAL: without this file, gcloud falls back to .gitignore semantics.
+# That mostly works here, but being explicit guarantees the 2.5 GB of sample
+# video never gets uploaded to Cloud Build — which would make every deploy
+# take an hour and could incur storage charges.
+#
+# Note: this controls what is UPLOADED to Cloud Build.
+# .dockerignore separately controls what goes INTO the image.
+
+# Never upload — 2.5 GB of local footage
+Sample Videos for Mobility Assessment/
+Sample Videos for Strength Assessment/
+*.mp4
+*.mov
+*.MOV
+*.MP4
+*.avi
+*.mkv
+
+# Dependencies — reinstalled during the image build
+node_modules/
+**/node_modules/
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Build output — the image builds this fresh
+frontend/dist/
+frontend/.vite/
+
+# Model weights — the Dockerfile downloads these at build time
+*.task
+
+# Runtime state
+backend/sessions/
+backend/temp_uploads/
+processor/eval/cache/
+
+# Version control and local tooling
+.git/
+.github/
+.vercel/
+.claude/
+.cursor/
+
+# Docs and local-only material not needed to build the image
+Specification Files/
+Mobility Assessment Redesign*/
+*.md
+!deploy/hf-space/README.md
+
+# Local scratch
+sample.js
+test_analysis.py
+test_local.py
+update_exercises.js
+update_exercises.py
+frontend/@/
+
+# Secrets / OS
+.env
+.env.*
+!.env.example
+.DS_Store
+**/.DS_Store
+*.log
