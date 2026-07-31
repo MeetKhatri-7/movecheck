@@ -4,12 +4,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci",
-
-  "//": "SPA rewrite — every non-asset path serves index.html so client-side routes (e.g. /assessments/mobility/dead-bug) survive a hard refresh. API calls are NOT proxied here: they go cross-origin straight to the CV container, because 80-150 MB video uploads exceed Vercel's proxy body limits.",
   "rewrites": [
     { "source": "/((?!assets/|images/|demo/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
-
   "headers": [
     {
       "source": "/assets/(.*)",
