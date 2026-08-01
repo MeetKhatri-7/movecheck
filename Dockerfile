@@ -62,12 +62,25 @@ FROM node:20-slim AS runtime
 #   ffmpeg          : the decoder backend behind cv2.VideoCapture. Without it
 #                     many phone-recorded .mp4/.mov files simply fail to open.
 #   curl            : used by the HEALTHCHECK and by deploy/start.sh
-# opencv-contrib-python-headless needs no libgl1/X11 — that is exactly why
-# the headless variant is pinned in requirements.txt.
+#
+#   libgles2 / libegl1 / libgl1 : REQUIRED BY MEDIAPIPE, not by OpenCV.
+#     MediaPipe's Tasks API dlopen()s the OpenGL ES stack when it builds its
+#     graph — on Linux this happens even for pure CPU inference. Without them
+#     PoseLandmarker creation dies with:
+#         OSError: libGLESv2.so.2: cannot open shared object file
+#     and every video fails to process. `libgles2` is the Bookworm package
+#     that provides libGLESv2.so.2.
+#
+#     Note this is unrelated to opencv-contrib-python-headless, which
+#     genuinely needs no GL — the headless variant is still correct, it just
+#     doesn't cover MediaPipe's own runtime dependencies.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-venv \
         libglib2.0-0 \
+        libgles2 \
+        libegl1 \
+        libgl1 \
         ffmpeg \
         curl \
         ca-certificates \
@@ -107,6 +120,23 @@ RUN curl -fsSL -o /app/processor/pose_landmarker_heavy.task \
       https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task \
     && chmod 644 /app/processor/pose_landmarker_heavy.task \
     && test -s /app/processor/pose_landmarker_heavy.task
+
+# ── Build-time smoke test ────────────────────────────────────────
+# Actually construct a PoseLandmarker here, at build time. MediaPipe resolves
+# its native dependencies (the GLES/EGL stack) lazily on first use, so a
+# missing shared library would otherwise stay invisible until a user uploaded
+# a video — surfacing as "every analysis fails" in production rather than as a
+# failed build. This makes that class of bug impossible to ship.
+RUN python -c "\
+import cv2, mediapipe as mp;\
+from mediapipe.tasks import python as mp_tasks;\
+from mediapipe.tasks.python import vision;\
+from mediapipe.tasks.python.vision import PoseLandmarker, PoseLandmarkerOptions;\
+opts = PoseLandmarkerOptions(\
+    base_options=mp_tasks.BaseOptions(model_asset_path='/app/processor/pose_landmarker_heavy.task'),\
+    running_mode=vision.RunningMode.VIDEO, num_poses=1);\
+lm = PoseLandmarker.create_from_options(opts); lm.close();\
+print('✓ smoke test: mediapipe', mp.__version__, '+ opencv', cv2.__version__, '- PoseLandmarker OK')"
 
 # (Demo reports live in frontend/public/demo and are already inside the
 #  built dist copied above — no separate COPY needed.)
