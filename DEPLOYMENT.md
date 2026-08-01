@@ -194,19 +194,27 @@ If that ID is taken, change the digits and rerun both lines.
 gcloud billing accounts list
 ```
 
+Output looks like this — the IDs below are **fake examples**, yours will differ:
+
 ```
 ACCOUNT_ID            NAME                OPEN
-01A2B3-C4D5E6-F7G8H9  My Billing Account  True
+015E61-650A2F-696FA4  My Billing Account  True
 ```
 
 If this returns nothing, you haven't created a billing account yet — do that at
 https://console.cloud.google.com/billing (add a card), then rerun.
 
-**2. Link it to *this* project:**
+If it lists **more than one**, any account with `OPEN: True` works.
+
+**2. Link it to *this* project.**
+
+> ⚠️ Substitute your real `ACCOUNT_ID` from step 1. Copy-pasting the literal
+> text below fails with `INVALID_ARGUMENT: Request contains an invalid
+> argument` — that error means the ID wasn't replaced.
 
 ```bash
 gcloud billing projects link movecheck-app-4471 \
-  --billing-account=01A2B3-C4D5E6-F7G8H9
+  --billing-account=REPLACE_WITH_YOUR_ACCOUNT_ID
 ```
 
 **3. Confirm:**
@@ -490,6 +498,25 @@ gcloud billing projects describe movecheck-app-4471   # expect billingEnabled: t
 
 You can safely leave the default project unused — an empty project costs
 nothing.
+
+### `INVALID_ARGUMENT: Request contains an invalid argument` when linking billing
+
+The `--billing-account` value wasn't replaced with your real ID. Run
+`gcloud billing accounts list`, copy an `ACCOUNT_ID` with `OPEN: True`, and use
+that exact string.
+
+### `Project ID you specified is already in use by another project`
+
+Harmless — you already created it. Skip `projects create` and just select it:
+
+```bash
+gcloud config set project movecheck-app-4471
+gcloud config get-value project     # confirm
+```
+
+(This error also appears if someone else globally holds that ID. If
+`gcloud projects list` doesn't show it as yours, pick a new ID with different
+digits and use that everywhere.)
 
 ### Cloud Run: deploys OK but `/api/health` times out
 
