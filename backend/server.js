@@ -113,6 +113,111 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 } });
 
 /* ═════════════════════════════════════════════════════════════════
+   Staged uploads — one HTTP request per video
+   ═════════════════════════════════════════════════════════════════
+   Managed hosts cap request bodies (Cloud Run: 32 MiB). Sending every
+   clip in a single multipart request breaks the moment an exercise needs
+   several: prone-y-t-w-raise takes 6 videos, the barbell lifts take 4.
+   Even well-compressed, that total blows the cap.
+
+   So each file is uploaded on its own request into a staging directory,
+   and analysis is triggered afterwards by reference. Per-request size
+   then depends on the LARGEST single clip, not the sum — which keeps
+   every exercise under the limit no matter how many angles it needs.
+
+   The original all-in-one multipart path still works unchanged, so
+   local dev and any older client keep functioning.
+   ═════════════════════════════════════════════════════════════════ */
+
+const STAGING_DIR = path.join(UPLOAD_DIR, 'staging');
+if (!fs.existsSync(STAGING_DIR)) fs.mkdirSync(STAGING_DIR, { recursive: true });
+
+// uploadId -> { dir, files: { field: absolutePath }, createdAt }
+const staged = new Map();
+const STAGING_TTL_MS = Number(process.env.STAGING_TTL_MS || 60 * 60 * 1000);
+
+function stagingDirFor(uploadId) {
+  return path.join(STAGING_DIR, uploadId);
+}
+
+function discardStaging(uploadId) {
+  const entry = staged.get(uploadId);
+  staged.delete(uploadId);
+  const dir = entry?.dir || stagingDirFor(uploadId);
+  // Guard against a crafted id escaping the staging root.
+  if (dir.startsWith(STAGING_DIR) && fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function scheduleStagingPrune(uploadId) {
+  const t = setTimeout(() => discardStaging(uploadId), STAGING_TTL_MS);
+  if (typeof t.unref === 'function') t.unref();
+}
+
+// Field names come from the exercise definition (e.g. 'left', 'y-overhead').
+const SAFE_FIELD = /^[a-zA-Z0-9_-]{1,64}$/;
+
+const stagingUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, _file, cb) => {
+      const dir = stagingDirFor(req.params.uploadId);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    // Named after the upload SLOT, never the browser-supplied filename, so
+    // two camera angles exported as IMG_0001.MOV can't overwrite each other.
+    filename: (req, file, cb) => {
+      const field = String(req.query.field || file.fieldname || 'file');
+      const ext = path.extname(file.originalname || '') || '.mp4';
+      cb(null, `${field}${ext}`);
+    },
+  }),
+  limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
+});
+
+/** Open a staging area. Returns the id the client attaches files to. */
+app.post('/api/uploads', (_req, res) => {
+  const uploadId = uuidv4();
+  const dir = stagingDirFor(uploadId);
+  fs.mkdirSync(dir, { recursive: true });
+  staged.set(uploadId, { dir, files: {}, createdAt: Date.now() });
+  scheduleStagingPrune(uploadId);
+  res.json({ uploadId, maxUploadMb: MAX_UPLOAD_MB });
+});
+
+/** Attach ONE video to a staging area: POST /api/uploads/:uploadId?field=left */
+app.post('/api/uploads/:uploadId', (req, res, next) => {
+  const { uploadId } = req.params;
+  if (!staged.has(uploadId)) {
+    return res.status(404).json({ error: 'Unknown or expired uploadId' });
+  }
+  const field = String(req.query.field || '');
+  if (!SAFE_FIELD.test(field)) {
+    return res.status(400).json({ error: `Invalid field name: ${field}` });
+  }
+  stagingUpload.single('file')(req, res, (err) => {
+    if (err) return next(err);
+    if (!req.file) return res.status(400).json({ error: 'No file received' });
+    const entry = staged.get(uploadId);
+    if (!entry) return res.status(404).json({ error: 'Staging area expired mid-upload' });
+    entry.files[field] = req.file.path;
+    res.json({
+      ok: true,
+      field,
+      bytes: req.file.size,
+      received: Object.keys(entry.files),
+    });
+  });
+});
+
+/** Abandon a staging area (client cancelled). */
+app.delete('/api/uploads/:uploadId', (req, res) => {
+  discardStaging(req.params.uploadId);
+  res.json({ ok: true });
+});
+
+/* ═════════════════════════════════════════════════════════════════
    Sessions
    ═════════════════════════════════════════════════════════════════ */
 
@@ -188,9 +293,31 @@ function analyseHandler(req, res) {
 
   // Async processing
   (async () => {
-    try {
-      const files = req.files || [];
+    // Files arrive one of two ways: inline as multipart on THIS request
+    // (original path), or pre-staged via /api/uploads (used when the total
+    // would exceed the host's request-body cap). Normalise both into
+    // [{ fieldname, path, originalname }] so the rest is identical.
+    const uploadId = req.body?.uploadId || req.query?.uploadId || null;
+    let files = [];
+    if (uploadId) {
+      const entry = staged.get(uploadId);
+      if (!entry || !Object.keys(entry.files).length) {
+        jobs.set(jobId, {
+          status: 'error', progress: 100, stage: 'Failed',
+          error: `Upload session ${uploadId} is empty or expired — please re-upload.`,
+          assessmentType: type, slug, exerciseId, sessionId,
+        });
+        scheduleJobPrune(jobId);
+        return;
+      }
+      files = Object.entries(entry.files).map(([field, p]) => ({
+        fieldname: field, path: p, originalname: path.basename(p),
+      }));
+    } else {
+      files = req.files || [];
+    }
 
+    try {
       jobs.set(jobId, { ...jobs.get(jobId), stage: 'Sending to processor', progress: 10 });
 
       const form = new FormData();
@@ -294,6 +421,12 @@ function analyseHandler(req, res) {
         setTimeout(() => {
           fs.rmSync(jobDir, { recursive: true, force: true });
         }, 5000);
+      }
+      // Staged uploads are consumed by exactly one analysis, so drop them
+      // as soon as it settles. Without this they'd linger until the TTL —
+      // and on hosts where /tmp is RAM-backed that is memory held hostage.
+      if (uploadId) {
+        setTimeout(() => discardStaging(uploadId), 5000);
       }
     }
   })();

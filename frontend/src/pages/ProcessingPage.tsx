@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/data/types';
 import type { AssessmentType } from '@/data/registry';
-import { uploadAndAnalyse, getJobStatus, type AnalyseParams } from '@/services/api';
+import {
+  uploadAndAnalyse, getJobStatus,
+  type AnalyseParams, type UploadProgress,
+} from '@/services/api';
 import { getStoredSessionId } from '@/services/session';
 import { uploadKeyPrefix, uploadFieldFromKey } from '@/data/uploadKeys';
 import { useAppContext } from '@/context/AppContext';
@@ -46,6 +49,10 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
   const [stageIdx, setStageIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
+  // Non-null while clips are still being shrunk and sent. Server-side analysis
+  // hasn't begun yet at that point, so showing the pose-estimation stage list
+  // would be a lie — this drives an honest "preparing" state instead.
+  const [prep, setPrep] = useState<UploadProgress | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const doneRef = useRef(false);
 
@@ -97,7 +104,11 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
           if (typeof v === 'string' && v !== '') (params as any)[k] = v;
         }
 
-        const res = await uploadAndAnalyse(assessmentType, exercise.slug, exUploads, sessionId, params);
+        const res = await uploadAndAnalyse(
+          assessmentType, exercise.slug, exUploads, sessionId, params,
+          (p) => setPrep(p.phase === 'done' && p.index === p.total ? null : p),
+        );
+        setPrep(null);
         jobId = res.jobId;
 
         // Polling must always terminate. A 404 means the backend restarted
@@ -178,8 +189,17 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // While preparing, the ring reflects REAL upload progress (files done, plus
+  // the current file's phase) rather than the simulated analysis counter.
+  // Compress and upload are weighted 50/50 within each file.
+  const prepPct = prep
+    ? Math.min(99, ((prep.index - 1 + (prep.phase === 'compressing' ? prep.ratio * 0.5
+        : prep.phase === 'uploading' ? 0.5 + prep.ratio * 0.5 : 1)) / prep.total) * 100)
+    : 0;
+  const shownProgress = prep ? prepPct : progress;
+
   const RING_C = 402.1; // 2πr, r=64
-  const ringOffset = RING_C - (RING_C * progress) / 100;
+  const ringOffset = RING_C - (RING_C * shownProgress) / 100;
 
   return (
     <div style={{
@@ -218,26 +238,40 @@ export function ProcessingPage({ exercise, assessmentType, uploads, onDone }: Pr
           </svg>
           <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px dashed rgba(255,255,255,0.12)', animation: 'ringRotate 12s linear infinite' }} />
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: F.display, fontSize: 'clamp(28px,9vw,38px)', letterSpacing: '0.5px' }}>{Math.round(progress)}<span style={{ fontSize: 18, color: C.ink3 }}>%</span></span>
-            <span style={{ fontSize: 9, letterSpacing: '1.5px', color: C.ink4, fontWeight: 700 }}>ANALYSING</span>
+            <span style={{ fontFamily: F.display, fontSize: 'clamp(28px,9vw,38px)', letterSpacing: '0.5px' }}>{Math.round(shownProgress)}<span style={{ fontSize: 18, color: C.ink3 }}>%</span></span>
+            <span style={{ fontSize: 9, letterSpacing: '1.5px', color: C.ink4, fontWeight: 700 }}>{prep ? 'PREPARING' : 'ANALYSING'}</span>
           </div>
         </div>
 
         <div style={{ fontFamily: F.display, fontSize: 'clamp(22px,5.5vw,28px)', letterSpacing: '0.4px', marginBottom: 10, textTransform: 'uppercase' }}>
-          {done ? 'Compiling Your Report' : 'Analysing Your Movement'}
+          {prep ? 'Preparing Your Videos' : done ? 'Compiling Your Report' : 'Analysing Your Movement'}
         </div>
         <div style={{ fontSize: 14, color: C.ink3, marginBottom: 'clamp(22px,5vw,32px)' }}>
-          {done ? "You'll see your report in a moment." : 'Hang tight — this usually takes under a minute.'}
+          {prep
+            ? (prep.total > 1
+                ? `${prep.phase === 'compressing' ? 'Shrinking' : 'Uploading'} video ${prep.index} of ${prep.total} — ${prep.field}`
+                : prep.phase === 'compressing' ? 'Shrinking your clip for a faster upload' : 'Uploading your clip')
+            : done ? "You'll see your report in a moment."
+            : 'Hang tight — this usually takes under a minute.'}
         </div>
 
+        {/* Compression runs in real time, so a 15s clip takes ~15s. Say so,
+            otherwise the wait reads as the app having hung. */}
+        {prep && prep.phase === 'compressing' && (
+          <div style={{ fontSize: 12, color: C.ink4, marginTop: -18, marginBottom: 'clamp(22px,5vw,32px)' }}>
+            Large clips are scaled to 1080p before upload — no detail the analyser uses is lost.
+          </div>
+        )}
+
         <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 'clamp(24px,5vw,36px)' }}>
-          <div style={{ height: '100%', background: `linear-gradient(90deg, ${C.clay}, ${C.clayHover})`, borderRadius: 4, width: `${progress}%`, transition: 'width .5s ease' }} />
+          <div style={{ height: '100%', background: `linear-gradient(90deg, ${C.clay}, ${C.clayHover})`, borderRadius: 4, width: `${shownProgress}%`, transition: 'width .5s ease' }} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left' }}>
           {stages.map(({ label }, i) => {
-            const isCurrent = i === stageIdx && !done;
-            const isDone = i < stageIdx || done;
+            // None of these have started while clips are still uploading.
+            const isCurrent = !prep && i === stageIdx && !done;
+            const isDone = !prep && (i < stageIdx || done);
             return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 14,
