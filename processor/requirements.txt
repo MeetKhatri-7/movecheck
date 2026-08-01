@@ -14,6 +14,17 @@ flask-cors>=4.0            # app.py imports this — required, was missing befor
 gunicorn>=21.2             # production WSGI server (Flask's dev server is not)
 
 # ── CV / ML core ─────────────────────────────────────────────────
+# Deliberately a RANGE, not a pin — the resolved version differs by platform
+# and that is unavoidable:
+#   • Linux / Docker (py3.11) → 0.10.21, the newest release with a manylinux
+#     wheel (0.10.22+ ship none)
+#   • macOS / py3.13+          → 0.10.35, which has no Linux wheel at all
+# Pinning either value breaks the other platform's install.
+#
+# The version split is safe ONLY because utils/landmarks.py now prefers the
+# Tasks API on both. Older releases also expose the deprecated
+# `mp.solutions.pose`, and preferring that sent Linux down an untested code
+# path that failed on every video. Do not reorder that preference.
 mediapipe>=0.10.14,<0.11
 # Headless build: no GUI/X11 system libraries needed (nothing in this codebase
 # calls imshow/waitKey), and `contrib` supplies cv2.TrackerKCF_create used by

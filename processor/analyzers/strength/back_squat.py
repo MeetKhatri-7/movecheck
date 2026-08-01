@@ -1082,7 +1082,12 @@ def _analyse_side(video_path, plate_size_kg, target_reps, variant):
     try:
         result = extract_all_landmarks(video_path)
     except Exception as e:
-        out['reason_unavailable'] = f'Landmark extraction failed: {e}'
+        # Log loudly: this used to be swallowed into the result dict, so the
+        # UI said "see logs" while the logs contained nothing about it.
+        out['reason_unavailable'] = f'Landmark extraction failed: {type(e).__name__}: {e}'
+        print(f"❌ Landmark extraction FAILED for {video_path}: {type(e).__name__}: {e}",
+              flush=True)
+        traceback.print_exc()
         return out
 
     frames = result['frames']
@@ -1170,7 +1175,12 @@ def _analyse_front(video_path, target_reps):
     try:
         result = extract_all_landmarks(video_path)
     except Exception as e:
-        out['reason_unavailable'] = f'Landmark extraction failed: {e}'
+        # Log loudly: this used to be swallowed into the result dict, so the
+        # UI said "see logs" while the logs contained nothing about it.
+        out['reason_unavailable'] = f'Landmark extraction failed: {type(e).__name__}: {e}'
+        print(f"❌ Landmark extraction FAILED for {video_path}: {type(e).__name__}: {e}",
+              flush=True)
+        traceback.print_exc()
         return out
 
     frames = result['frames']
@@ -1269,7 +1279,15 @@ def _analyse_dual_cam(files, plate_size_kg, weight_max, reps_max,
     front = _analyse_front(front_path, target_reps_front)
 
     if not side['available'] and not front['available']:
-        return _fallback('Both videos failed to process — see logs.')
+        # Surface the ACTUAL reasons rather than "see logs" — the user can't
+        # read server logs, and support round-trips on this were expensive.
+        reasons = ' | '.join(
+            f"{label}: {v['reason_unavailable']}"
+            for label, v in (('side', side), ('front', front))
+            if v.get('reason_unavailable')
+        ) or 'unknown cause'
+        print(f"❌ back-squat: both views unavailable → {reasons}", flush=True)
+        return _fallback(f'Both videos failed to process. {reasons}')
 
     # ── 1. Per-rep aggregation ────────────────────────────────────
     side_reps = []

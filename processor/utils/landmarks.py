@@ -28,30 +28,42 @@ mp_vision = None
 try:
     import mediapipe as _mp
     mp = _mp
-    
-    # Try legacy solutions API first (mediapipe < 0.10.14)
+
+    # Prefer the TASKS API. It must be tried FIRST, not second.
+    #
+    # Both APIs coexist in mediapipe 0.10.14–0.10.21, but they are not
+    # equivalent here: the Tasks path (pose_landmarker_heavy.task) is the one
+    # every analyzer and all 12 demo reports were validated against, while the
+    # legacy `mp.solutions.pose` path is deprecated and effectively untested.
+    #
+    # This ordering used to be reversed, which produced a silent split-brain:
+    # dev machines on 0.10.35 (where mp.solutions was removed) ran Tasks, while
+    # Linux containers — pip caps at 0.10.21 there, since 0.10.22+ ship no
+    # manylinux wheel — ran legacy and failed instantly on every video.
+    # Preferring Tasks makes every environment run identical code.
     try:
-        mp_pose = mp.solutions.pose
-        MP_LEGACY = True
+        from mediapipe.tasks.python.vision import PoseLandmarker as _PL
+        from mediapipe.tasks.python.vision import PoseLandmarkerOptions as _PLO
+        from mediapipe.tasks.python import vision as _vision
+        from mediapipe.tasks import python as _mp_tasks
+        PoseLandmarker = _PL
+        PoseLandmarkerOptions = _PLO
+        mp_vision = _vision
+        mp_tasks_base = _mp_tasks
         MP_AVAILABLE = True
-    except AttributeError:
-        pass
-    
-    # Try new tasks-based API (mediapipe >= 0.10.14)
-    if not MP_LEGACY:
+    except ImportError as e:
+        print(f"⚠️  MediaPipe Tasks API unavailable ({e}) — falling back to legacy solutions API")
+        # Legacy fallback, only for mediapipe builds without the Tasks API.
         try:
-            from mediapipe.tasks.python.vision import PoseLandmarker as _PL
-            from mediapipe.tasks.python.vision import PoseLandmarkerOptions as _PLO
-            from mediapipe.tasks.python import vision as _vision
-            from mediapipe.tasks import python as _mp_tasks
-            PoseLandmarker = _PL
-            PoseLandmarkerOptions = _PLO
-            mp_vision = _vision
-            mp_tasks_base = _mp_tasks
+            mp_pose = mp.solutions.pose
+            MP_LEGACY = True
             MP_AVAILABLE = True
-        except ImportError as e:
-            print(f"⚠️  MediaPipe tasks API not available: {e}")
-            
+        except AttributeError:
+            print("⚠️  Neither MediaPipe API is available — pose extraction will fail")
+
+    print(f"🧠 MediaPipe {getattr(mp, '__version__', '?')} — "
+          f"using {'LEGACY solutions' if MP_LEGACY else 'TASKS'} API", flush=True)
+
 except ImportError as e:
     print(f"⚠️  MediaPipe not installed: {e}")
 
